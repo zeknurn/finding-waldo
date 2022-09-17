@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "genetic-algorithm", "genetic-algorithm\genetic-algorithm.pyproj", "{5F916D71-C827-481A-8FF1-BCE1F52C533C}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "neural-network-bp", "neural-network-bp\neural-network-bp.pyproj", "{43738F0B-3B23-4383-A6E9-80DCE0BD9E28}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "k-NN", "k-NN\k-NN.pyproj", "{77762F25-530F-481F-A5EC-C52676C108FE}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "bayesian-classifier", "bayesian-classifier\bayesian-classifier.pyproj", "{556CEDCF-7865-486B-9CEA-667C3E277787}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "bags-of-features", "bags-of-features\bags-of-features.pyproj", "{202EF2D1-0D88-473E-912C-5972B3AF89A8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5F916D71-C827-481A-8FF1-BCE1F52C533C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F916D71-C827-481A-8FF1-BCE1F52C533C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43738F0B-3B23-4383-A6E9-80DCE0BD9E28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43738F0B-3B23-4383-A6E9-80DCE0BD9E28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77762F25-530F-481F-A5EC-C52676C108FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77762F25-530F-481F-A5EC-C52676C108FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{556CEDCF-7865-486B-9CEA-667C3E277787}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{556CEDCF-7865-486B-9CEA-667C3E277787}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{202EF2D1-0D88-473E-912C-5972B3AF89A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{202EF2D1-0D88-473E-912C-5972B3AF89A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EB5DB845-E7ED-431D-9A3C-FE6C6E4B4A55}
+	EndGlobalSection
+EndGlobal
