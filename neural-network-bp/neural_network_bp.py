@@ -9,14 +9,14 @@ class Neuron:
 class Network:
     def __init__(self):
         self.network = []
-        self.neuron_id = 0
+        self.neuron_counter = 0
 
     def create_layer(self, N) -> list:
         layer = []
         for i in range(0, N):
             neuron = Neuron()
-            neuron.neuron_id = self.neuron_id
-            self.neuron_id += 1
+            neuron.neuron_id = self.neuron_counter
+            self.neuron_counter += 1
             layer.append(neuron)
         return layer
 
