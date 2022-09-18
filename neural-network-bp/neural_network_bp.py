@@ -1,9 +1,10 @@
 class Neuron:
-    neuron_id = 0
-    output = 0
-    bias = 0
-    prev = []
-    weights = []
+    def __init__(self):
+        self.neuron_id = 0
+        self.output = 0
+        self.bias = 0
+        self.prev = []
+        self.weights = []
 
 
 class Network:
@@ -43,6 +44,7 @@ class Network:
         # Connect layers
         for i in range(1, len(self.network)):
             self.connect(self.network[i - 1], self.network[i])
+
         return self.network
 
     def relu(self, x):
@@ -60,11 +62,11 @@ class Network:
     def print_neurons(self):
         for i in range(0, len(self.network)):
             for node in self.network[i]:
-                print("layer id: ", i, " node id: ", node.neuron_id, " incoming cons:", len(node.prev))
+                print("layer id: ", i, " neuron id: ", node.neuron_id, " incoming connections:", len(node.prev))
 
 
 
 NN = Network()
-NN.create_network(1, 5, 1, 1)
+NN.create_network(1, 5, 2, 2)
 NN.feed_forward()
 NN.print_neurons()
