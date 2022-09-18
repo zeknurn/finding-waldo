@@ -1,8 +1,10 @@
+import csv
+
 class Neuron:
     def __init__(self):
         self.neuron_id = 0
         self.output = 0
-        self.bias = 0
+        self.bias = 1
         self.prev = []
         self.weights = []
 
@@ -10,14 +12,12 @@ class Neuron:
 class Network:
     def __init__(self):
         self.network = []
-        self.neuron_counter = 0
 
     def create_layer(self, N) -> list:
         layer = []
         for i in range(0, N):
             neuron = Neuron()
-            neuron.neuron_id = self.neuron_counter
-            self.neuron_counter += 1
+            neuron.neuron_id = i
             layer.append(neuron)
         return layer
 
@@ -52,21 +52,55 @@ class Network:
 
     def feed_forward(self):
         for layer in self.network:
-            for node in layer:
-                node.output = node.bias
-                for i in range(0, len(node.prev)):
-                    node.output += node.prev[i].output * node.weights[i]
+            for neuron in layer:
+                neuron.output = neuron.bias
+                for i in range(0, len(neuron.prev)):
+                    neuron.output += neuron.prev[i].output * neuron.weights[i]
 
-                node.output = self.relu(node.output)
+                neuron.output = self.relu(neuron.output)
 
     def print_neurons(self):
         for i in range(0, len(self.network)):
-            for node in self.network[i]:
-                print("layer id: ", i, " neuron id: ", node.neuron_id, " incoming connections:", len(node.prev))
+            for neuron in self.network[i]:
+                print("layer id: ", i, " neuron id: ", neuron.neuron_id, " inc con:", len(neuron.prev), " bias:", neuron.bias, "weights: ", neuron.weights)
+
+    def save_bias_weights(self):
+        headers = ['layer_id', 'neuron_id', 'bias', 'weights'] 
+
+        rows = [] 
+  
+        for i in range(0, len(self.network)):
+            for neuron in self.network[i]:
+                rows.append([i, neuron.neuron_id, neuron.bias, neuron.weights])
+
+        with open('bias_weights.csv', 'w', newline='') as f:
+      
+            # using csv.writer method from CSV package
+            write = csv.writer(f)
+      
+            write.writerow(headers)
+            write.writerows(rows)
+
+    def load_bias_weights(self):
+        import ast
+        with open('bias_weights.csv', newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+
+            #skip first row because it's headers
+            next(reader, None)
+
+            for row in reader:
+                layer = self.network[int(row[0])] #first value is the layer id
+                neuron = layer[int(row[1])] #second value is the neuron id
+                neuron.bias = int(row[2]) #third value is the bias
+                neuron.weights = ast.literal_eval(row[3]) #fourth value is a string that needs to converted to a list
+
 
 
 
 NN = Network()
 NN.create_network(1, 5, 2, 2)
+NN.load_bias_weights() #if changing the layout of the NN disable the loading for one run
 NN.feed_forward()
 NN.print_neurons()
+NN.save_bias_weights()
