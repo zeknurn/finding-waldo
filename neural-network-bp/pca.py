@@ -12,23 +12,23 @@ for file in listdir(path):
     if count < 1:
         count += 1
         image_path = path + '/' + file
+
+        # Convert image to BW using mean.
         image = Image.open(image_path)
-        pixels = image.load()
-        width, height = image.size
+        h, w = image.size
+        gray = image.convert('L') # Convert to grayscale
+        bw = np.asarray(gray).copy()
+        bw[bw < 128] = 0
+        bw[bw >= 128] = 255
 
-        # Testing numpy alternative.
+        # For testing
+        # bw_image = Image.fromarray(bw)
+        # bw_image.show()
 
-        # Converting each image to a set of attribute vectors.
-        attribute_vector = []
-        for y in range(height):
-            pixels_in_row = []
-            for x in range(width):
-                pixels_in_row.append(pixels[x, y])
-            attribute_vector.append(pixels_in_row)
-
-
-        Image.fromarray(pixels)
-
-
-
-# Not waldo
+        # Converting pixel values to attribute vector
+        attributes = []
+        for y in range(h):
+            pix_row = []
+            for x in range(w):
+                pix_row.append(bw[x,y])
+            attributes.append(pix_row)
