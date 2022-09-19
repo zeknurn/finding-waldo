@@ -1,12 +1,13 @@
 from os import listdir
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-
-
+import numpy as np
+import matplotlib as plt
+import pandas as pd
 
 # Waldo
-for image in listdir('/home/vic/Downloads/archive/wheres-waldo/Hey-Waldo/64-bw/waldo'):
-    print(image)
+path = '/home/vic/Downloads/archive/wheres-waldo/Hey-Waldo/64-bw/waldo'
+for file in listdir(path):
+    image = open(path + '/' + file)
+
 
 # Not waldo
