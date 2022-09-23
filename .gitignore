@@ -1,6 +1,8 @@
 # Waldo specific
 features_notwaldo.csv
 features_waldo.csv
+path_waldo.txt
+path_notwaldo.txt
 
 
 
