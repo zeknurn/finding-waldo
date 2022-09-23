@@ -1,3 +1,9 @@
+# Waldo specific
+features_notwaldo.csv
+features_waldo.csv
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
