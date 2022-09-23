@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 # Waldo
 path = 'C:/Users/Vryds/Documents/wheres-waldo/Hey-Waldo/64/waldo'
 with open('features.csv', 'w') as f:
+    f.write('waldo\n')
     for file in listdir(path):
         image_path = path + '/' + file
         rgb_image = plt.imread(image_path)
