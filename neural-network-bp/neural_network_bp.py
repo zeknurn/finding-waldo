@@ -95,18 +95,18 @@ class Network:
                 neuron.bias = int(row[2]) #third value is the bias
                 neuron.weights = ast.literal_eval(row[3]) #fourth value is a string that needs to converted to a list
 
-    def cost(self, output, expectedOutput) -> float:
-        error = output - expectedOutput
+    def cost(self, output, expected_output) -> float:
+        error = output - expected_output
         return error * error
 
-    def loss(self, expectedOutput) -> float:
+    def loss(self, expected_output) -> float:
         self.feed_foward()
 
-        outputlayer = self.network.layer[len(self.network) - 1]
+        output_layer = self.network.layer[len(self.network) - 1]
 
         cost = 0.0
-        for i in range(0, len(outputlayer)):
-            cost += self.cost(outputlayer[i].output, expectedOutput[i])
+        for i in range(0, len(output_layer)):
+            cost += self.cost(output_layer[i].output, expected_output[i])
 
         return cost
 
