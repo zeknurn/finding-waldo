@@ -95,12 +95,39 @@ class Network:
                 neuron.bias = int(row[2]) #third value is the bias
                 neuron.weights = ast.literal_eval(row[3]) #fourth value is a string that needs to converted to a list
 
+    def cost(self, output, expectedOutput) -> float:
+        error = output - expectedOutput
+        return error * error
 
+    def loss(self, expectedOutput) -> float:
+        self.feed_foward()
 
+        outputlayer = self.network.layer[len(self.network) - 1]
+
+        cost = 0.0
+        for i in range(0, len(outputlayer)):
+            cost += self.cost(outputlayer[i].output, expectedOutput[i])
+
+        return cost
+
+    def back_propagation(self, training_data, labels, weights, layer_count):
+        dosomething
+
+    def train_network(self):
+        #load data
+        #split data into train and test data
+        #batching
+        #run backpropagation
+        dosomething
+
+    def classify(self):
+        for neuron in self.network[len(self.network) - 1]:
+            print("classification, neuron id: ", neuron.neuron_id, " output: " , neuron.output)
 
 NN = Network()
 NN.create_network(1, 5, 2, 2)
 NN.load_bias_weights() #if changing the layout of the NN disable the loading for one run
 NN.feed_forward()
 NN.print_neurons()
+NN.classify()
 NN.save_bias_weights()
