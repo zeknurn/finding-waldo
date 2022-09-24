@@ -55,9 +55,9 @@ class Network:
     def feed_forward(self, data_point):
 
         #hook up input layer with the data_point
-        for i in range(0, len(data_point)):
+        for i in range(0, len(data_point)- len(self.network[-1])):
             input_layer = self.network[0]
-            input_layer[i].output = data_point[i]
+            input_layer[i].output = data_point[i] 
 
         #calculate output for subsequent layers
         for layer in self.network[1:]:
@@ -114,12 +114,13 @@ class Network:
     def loss(self, data_point) -> float:
         self.feed_forward(data_point)
 
-        output_layer = self.network[len(self.network) - 1]
+        output_layer = self.network[-1]
 
         cost = 0.0
-        expected_output = [1,0] #expected output is currently hardcoded, it needs to loaded from the data_point
         for i in range(0, len(output_layer)):
-            cost += self.cost(output_layer[i].output, expected_output[i]) 
+            #the expected output are stored at the end of the data_point
+            expected_output = data_point[len(data_point) - len(output_layer) + i]
+            cost += self.cost(output_layer[i].output, expected_output) 
 
         return cost
 
@@ -149,14 +150,18 @@ def load_data(training_size_percent, testing_size_percent):
 
     with open('features_waldo.csv', 'r') as f:
         data = np.loadtxt(f, delimiter=',')
-
+        #add the expected output values as columns to the end of the input values. first column is 1 for waldo, second column is 1 for no waldo
+        data = np.append(data, np.ones([len(data),1]), axis = 1)
+        data = np.append(data, np.zeros([len(data),1]), axis = 1)
+    
     with open('features_notwaldo.csv', 'r') as f:
         notwaldo = np.loadtxt(f, delimiter=',')
+        #add the expected output values as columns to the end of the input values. first column is 1 for waldo, second column is 1 for no waldo
+        notwaldo = np.append(notwaldo, np.zeros([len(notwaldo),1]), axis = 1)
+        notwaldo = np.append(notwaldo, np.ones([len(notwaldo),1]), axis = 1)
 
     data = np.append(data, notwaldo, axis = 0)
-
-    #set expected output for all data points inside the data collection
-
+    
     #set the random seed to get the same result every run
     np.random.seed(0)
     
@@ -184,8 +189,11 @@ NN = Network()
 
 training_data, testing_data, validation_data = load_data(training_size_percent = 80, testing_size_percent = 10)
 
-input_layer_size = len(training_data[0])
-NN.create_network(1, 5, input_layer_size, 2)
+output_layer_size = 2
+#the training data contains both input values and expected output values
+input_layer_size = len(training_data[0]) - output_layer_size
+
+NN.create_network(1, 5, input_layer_size, output_layer_size)
 NN.load_bias_weights() #if you're changing the layout of the NN, disable the loading of biases and weights for one iteration
 
 average_loss = NN.loss_average(training_data)
