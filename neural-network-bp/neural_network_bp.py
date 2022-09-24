@@ -29,6 +29,7 @@ class Network:
                 to_node.weights.append(1)
 
     def create_network(self, nr_of_hidden_layers, size_of_hidden_layers, nr_of_input, nr_of_output) -> list:
+        print("creating network")
         #network = [list] * (nr_of_input + nr_of_hidden_layers + nr_of_output)
 
         # Create layers
@@ -68,13 +69,15 @@ class Network:
                 neuron.output = self.relu(neuron.output)
 
     def print_neurons(self):
+        print("printing neurons")
         for i in range(0, len(self.network)):
             for neuron in self.network[i]:
                 print("layer id: ", i, " neuron id: ", neuron.neuron_id, " inc con:", len(neuron.prev), " bias:", neuron.bias, "weights: ", neuron.weights, "output: ", neuron.output)
 
     def save_bias_weights(self):
-        headers = ['layer_id', 'neuron_id', 'bias', 'weights'] 
+        print("saving bias and weights")
 
+        headers = ['layer_id', 'neuron_id', 'bias', 'weights']
         rows = [] 
   
         for i in range(0, len(self.network)):
@@ -90,6 +93,7 @@ class Network:
             write.writerows(rows)
 
     def load_bias_weights(self):
+        print("loading bias and weights")
         import ast
         with open('bias_weights.csv', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
@@ -102,16 +106,6 @@ class Network:
                 neuron = layer[int(row[1])] #second value is the neuron id
                 neuron.bias = int(row[2]) #third value is the bias
                 neuron.weights = ast.literal_eval(row[3]) #fourth value is a string that needs to converted to a list
-
-    def load_training_data(self):
-        with open('features_waldo.csv', 'r') as f:
-            data = np.loadtxt(f, delimiter=',')
-
-        #load notwaldo data
-        #set expected output for all data points inside the data collection
-        #split data into training and test data by some proportion
-
-        return data
 
     def cost(self, output, expected_output) -> float:
         error = output - expected_output
@@ -130,6 +124,8 @@ class Network:
         return cost
 
     def loss_average(self, data_collection):
+        print("calculating average loss")
+
         total_cost = 0.0
         for data_point in data_collection:
             total_cost += self.loss(data_point)
@@ -148,16 +144,52 @@ class Network:
         for neuron in self.network[len(self.network) - 1]:
             print("classification, neuron id: ", neuron.neuron_id, " output: " , neuron.output)
 
+def load_data(training_size_percent, testing_size_percent):
+    print("loading data")
+
+    with open('features_waldo.csv', 'r') as f:
+        data = np.loadtxt(f, delimiter=',')
+
+    with open('features_notwaldo.csv', 'r') as f:
+        notwaldo = np.loadtxt(f, delimiter=',')
+
+    data = np.append(data, notwaldo, axis = 0)
+
+    #set expected output for all data points inside the data collection
+
+    #set the random seed to get the same result every run
+    np.random.seed(0)
+    
+    #get the row count of the matrix
+    rows = data.shape[0]
+
+    #shuffle the rows of the matrix
+    np.random.shuffle(data)
+    
+    #calculate the last row index of the training and testing samples
+    last_row_training = int(rows * training_size_percent / 100)    
+    last_row_testing = last_row_training + int(rows * testing_size_percent / 100)
+
+    #slice the matrix into three by using the row indexes
+    training_data = data[:last_row_training]
+    testing_data = data[last_row_training:last_row_testing]
+    validation_data = data[last_row_testing:]
+
+    print("sample sizes: data: ", data.shape, " training: ", training_data.shape, " test:", testing_data.shape, " validation:", validation_data.shape)
+
+    return training_data, testing_data, validation_data
+
+
 NN = Network()
 
-data_collection = NN.load_training_data()
+training_data, testing_data, validation_data = load_data(training_size_percent = 80, testing_size_percent = 10)
 
-input_layer_size = len(data_collection[0])
+input_layer_size = len(training_data[0])
 NN.create_network(1, 5, input_layer_size, 2)
 NN.load_bias_weights() #if you're changing the layout of the NN, disable the loading of biases and weights for one iteration
 
-average_cost = NN.loss_average(data_collection)
-print("average cost: ", average_cost)
+average_loss = NN.loss_average(training_data)
+print("average cost: ", average_loss)
 
 NN.print_neurons()
 #NN.classify()
