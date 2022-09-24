@@ -1,4 +1,5 @@
 import csv
+import numpy as np
 
 class Neuron:
     def __init__(self):
@@ -50,8 +51,15 @@ class Network:
     def relu(self, x):
         return max(0.0, x)
 
-    def feed_forward(self):
-        for layer in self.network:
+    def feed_forward(self, data_point):
+
+        #hook up input layer with the data_point
+        for i in range(0, len(data_point)):
+            input_layer = self.network[0]
+            input_layer[i].output = data_point[i]
+
+        #calculate output for subsequent layers
+        for layer in self.network[1:]:
             for neuron in layer:
                 neuron.output = neuron.bias
                 for i in range(0, len(neuron.prev)):
@@ -62,7 +70,7 @@ class Network:
     def print_neurons(self):
         for i in range(0, len(self.network)):
             for neuron in self.network[i]:
-                print("layer id: ", i, " neuron id: ", neuron.neuron_id, " inc con:", len(neuron.prev), " bias:", neuron.bias, "weights: ", neuron.weights)
+                print("layer id: ", i, " neuron id: ", neuron.neuron_id, " inc con:", len(neuron.prev), " bias:", neuron.bias, "weights: ", neuron.weights, "output: ", neuron.output)
 
     def save_bias_weights(self):
         headers = ['layer_id', 'neuron_id', 'bias', 'weights'] 
@@ -95,27 +103,43 @@ class Network:
                 neuron.bias = int(row[2]) #third value is the bias
                 neuron.weights = ast.literal_eval(row[3]) #fourth value is a string that needs to converted to a list
 
+    def load_training_data(self):
+        with open('features_waldo.csv', 'r') as f:
+            data = np.loadtxt(f, delimiter=',')
+
+        #load notwaldo data
+        #set expected output for all data points inside the data collection
+        #split data into training and test data by some proportion
+
+        return data
+
     def cost(self, output, expected_output) -> float:
         error = output - expected_output
         return error * error
 
-    def loss(self, expected_output) -> float:
-        self.feed_foward()
+    def loss(self, data_point) -> float:
+        self.feed_forward(data_point)
 
-        output_layer = self.network.layer[len(self.network) - 1]
+        output_layer = self.network[len(self.network) - 1]
 
         cost = 0.0
+        expected_output = [1,0] #expected output is currently hardcoded, it needs to loaded from the data_point
         for i in range(0, len(output_layer)):
-            cost += self.cost(output_layer[i].output, expected_output[i])
+            cost += self.cost(output_layer[i].output, expected_output[i]) 
 
         return cost
+
+    def loss_average(self, data_collection):
+        total_cost = 0.0
+        for data_point in data_collection:
+            total_cost += self.loss(data_point)
+
+        return total_cost / len(data_collection)
 
     def back_propagation(self, training_data, labels, weights, layer_count):
         dosomething
 
     def train_network(self):
-        #load data
-        #split data into train and test data
         #batching
         #run backpropagation
         dosomething
@@ -125,9 +149,16 @@ class Network:
             print("classification, neuron id: ", neuron.neuron_id, " output: " , neuron.output)
 
 NN = Network()
-NN.create_network(1, 5, 2, 2)
-NN.load_bias_weights() #if changing the layout of the NN disable the loading for one run
-NN.feed_forward()
+
+data_collection = NN.load_training_data()
+
+input_layer_size = len(data_collection[0])
+NN.create_network(1, 5, input_layer_size, 2)
+NN.load_bias_weights() #if you're changing the layout of the NN, disable the loading of biases and weights for one iteration
+
+average_cost = NN.loss_average(data_collection)
+print("average cost: ", average_cost)
+
 NN.print_neurons()
-NN.classify()
+#NN.classify()
 NN.save_bias_weights()
