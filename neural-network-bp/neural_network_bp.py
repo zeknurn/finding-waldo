@@ -134,12 +134,21 @@ class Network:
         return total_cost / len(data_collection)
 
     def back_propagation(self, training_data, labels, weights, layer_count):
-        dosomething
+        #Step 1: Inputs X, arrive through the preconnected path.
+        #Step 2: The input is modeled using true weights W. Weights are usually chosen randomly.
+        #Step 3: Calculate the output of each neuron from the input layer to the hidden layer to the output layer.
+        #Step 4: Calculate the error in the outputs
+        #Step 5: From the output layer, go back to the hidden layer to adjust the weights to reduce the error.
+        #Step 6: Repeat the process until the desired output is achieved.
+        do_something
 
-    def train_network(self):
-        #batching
-        #run backpropagation
-        dosomething
+    def train_network(self, training_data):
+        #randomize weights for hidden layer
+        #split data into N batches.
+        #loop batches until cancelled
+            #calculate the average values of a batch
+            #run backpropagation on the average values of a batch
+        do_something
 
     def classify(self):
         for neuron in self.network[len(self.network) - 1]:
