@@ -10,7 +10,6 @@ class Neuron:
         self.prev = []
         self.weights = []
 
-
 class Network:
     def __init__(self):
         self.network = []
@@ -52,6 +51,10 @@ class Network:
 
     def relu(self, x):
         return max(0.0, x)
+
+    # Derivative of relu, if x > 0, return 1, else 0.
+    def d_relu(self, x):
+        return 1 * (x > 0)
 
     def feed_forward(self, data_point):
 
@@ -137,34 +140,30 @@ class Network:
 
     def back_propagation(self, layers): # + training data and labels later.
 
-        # Is looking for the negative gradient for the cost function. How far is its current value from its target
-        # value, Sigmoid(weighted sum(w1*n1) of all activation in previous layers + bias. Notes: Shuffle training data
-        # and apply in minibatches -> Stochastic gradient decent. Less efficient, good approximation. Good
-        # computational speed. a(L) = activation_func(w(L)*a(L-1)+b(L) = z(L))
+        # Calculate error in the outputs
+        # Stochastic gradient decent, small random batches. Like a drunk stumble guy!
 
-        L = []  # Layers
-        w = []  # Weights
-        a = []  # Activation values of neurons
-        z = []  # A activation_func(sum)
-        b = []  # Bias for neurons
-        c = []
         y = 0
-
-        # 1d Case
-        # C is the result from our backprop.
-        c[0] = (a[L] - y)**2
-        # Z, activation_func(sum)
-        z(L) = w[L] * a[L-1] + b[L]
-        a[L] = self.relu(z[L])
-
+        l = 0
         for layer in reversed(layers):
+            n = 0
+            l += 1
             for neuron in layer:
-                for weight in neuron.weights:
-                    z = self.relu(weight * layer[layer-1, neuron].output)
-                    c = (z - y)**2
-                    neuron.output = c
-        return 0
+                # Compute relevant derivatives
+                # derivative of  C with respect to current neuron activation.
+                # 2*(a(L)-y)
+                dC = 2(neuron.output - y)
 
+                # derivative of current neuron activation with respect to sum of previous layer, i.e. w(L)*a(L-1)+b(L)
+                # dReLU(z(L))
+                dA = self.d_relu(z)
+
+                # dz(L) with respect to w(L)
+                # a(L-1)
+
+
+
+        return 0
 
     def train_network(self):
         return 0
