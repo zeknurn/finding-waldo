@@ -6,25 +6,26 @@ class Neuron:
     def __init__(self):
         self.neuron_id = 0
         self.prev = []
+        self.weighted_input = 0
         self.output = 0
-        self.output_sensitivity = 0
+        self.output_gradient = 0
         self.bias = 1.0
-        self.bias_sensitivty = 0
+        self.bias_gradient = 0
         self.weights = []
-        self.weights_sensitivity = []
+        self.weights_gradient = []
 
     def reset_sensitivies(self):
-        self.output_sensitivity = 0
-        self.bias_sensitivty = 0
-        for x in self.weights_sensitivity:
+        self.output_gradient = 0
+        self.bias_gradient = 0
+        for x in self.weights_gradient:
             x = 0
 
-    #computes gradient descent for the stored incoming weights and bias for this neuron
-    def compute(self, learning_rate, learning_count):
+    #applies gradient descent for the stored incoming weights and bias for this neuron
+    def apply_gradient_descent(self, learning_rate, learning_count):
         for i in range(0, len(self.weights)):
-            self.weights[i] += learning_rate * -(self.weights_sensitivity[i] / learning_count)
+            self.weights[i] += learning_rate * -(self.weights_gradient[i] / learning_count)
             
-        self.bias += learning_rate * -(self.bias_sensitivty / learning_count)
+        self.bias += learning_rate * -(self.bias_gradient / learning_count)
 
 class Network:
     def __init__(self):
@@ -43,7 +44,7 @@ class Network:
             for from_node in from_layer:
                 to_node.prev.append(from_node)
                 to_node.weights.append(1)
-                to_node.weights_sensitivity.append(0)
+                to_node.weights_gradient.append(0)
 
     def create_network(self, nr_of_hidden_layers, size_of_hidden_layers, nr_of_input, nr_of_output) -> list:
         print("creating network")
@@ -85,9 +86,9 @@ class Network:
             for neuron in layer:
                 neuron.output = neuron.bias
                 for i in range(0, len(neuron.prev)):
-                    neuron.output += neuron.prev[i].output * neuron.weights[i]
+                    neuron.weighted_input += neuron.prev[i].output * neuron.weights[i]
 
-                neuron.output = self.relu(neuron.output)
+                neuron.output = self.relu(neuron.weighted_input)
 
     def print_neurons(self):
         print("printing neurons")
@@ -133,13 +134,16 @@ class Network:
         error = output - expected_output
         return error * error
 
+    def get_expected_output(self, data_point, output_layer, i):
+        return data_point[len(data_point) - len(output_layer) + i]
+
     def loss(self, data_point) -> float:
         output_layer = self.network[-1]
 
         cost = 0.0
         for i in range(0, len(output_layer)):
             # the expected output are stored at the end of the data_point
-            expected_output = data_point[len(data_point) - len(output_layer) + i]
+            expected_output = self.get_expected_output(data_point, output_layer, i)
             cost += self.cost(output_layer[i].output, expected_output)
 
         return cost
@@ -153,45 +157,94 @@ class Network:
 
         return total_cost / len(data_collection)
 
-    def apply_gradient_descent(self, learning_rate, learning_count):
+    def apply_all_gradient_descent(self, learning_rate, learning_count):
         for layer in self.network:
             for neuron in layer:
-                neuron.compute(learning_rate, learning_count)
+                neuron.apply_gradient_descent(learning_rate, learning_count)
 
     def reset_sensitivies(self):
         for layer in self.network:
             for neuron in layer:
                 neuron.reset_sensitivies()
 
-    def back_propagation(self, data_point): #each data point has both training data and the expected outcome
+    def cost_wrt_activation_derivative(self, output, expected_output):
+        return 2 * (output - expected_output)
 
-        cost = self.loss(data_point)
+    def activation_wrt_weighted_input_derivative(self, weighted_input):
+        if weighted_input > 0:
+            return 1
+        else:
+            return 0
 
-        y = 0
-        l = 0
-        for layer in reversed(self.network):
-            n = 0
-            l += 1
-            for neuron in layer:
-                # Compute relevant derivatives
-                # derivative of  C with respect to current neuron activation.
-                # 2*(a(L)-y)
-                #dC = 2(neuron.output - y)
+    def calculate_output_layer_gradients(self, data_point):
+        # calculate output layer values
+        output_layer = self.network[-1]
+        weighted_input_derivs = []
+        for i in range(0, len(output_layer)):
+            neuron = output_layer[i]
 
-                # derivative of current neuron activation with respect to sum of previous layer, i.e. w(L)*a(L-1)+b(L)
-                # dReLU(z(L))
-                #dA = self.d_relu(z)
+            #calculate how the activation affects the cost
+            cost_deriv = self.cost_wrt_activation_derivative(neuron.output, self.get_expected_output(data_point, output_layer, i))
 
-                # dz(L) with respect to w(L)
-                # a(L-1)
-                return 0
+            #calculate how the weighted input affects the activation
+            activation_deriv = self.activation_wrt_weighted_input_derivative(neuron.weighted_input)
+
+            #calculate how the weighted input affects the cost
+            weighted_input_deriv = cost_deriv * activation_deriv
+
+            weighted_input_derivs.append(weighted_input_deriv)
+
+            #calculate how the weights affects the cost
+            for j in range(0, len(neuron.weights)):
+                neuron.weights_gradient[j] += neuron.weights[j] * weighted_input_deriv
+
+            #calculate how the bias affects the cost
+            neuron.bias_gradient += 1 * weighted_input_deriv
+
+        return weighted_input_derivs
+
+    def calculate_hidden_layer_gradients(self, hidden_layer, prev_layer_derivatives):
+        weighted_input_derivs = []
+        for neuron in hidden_layer:
+            for prev_layer_deriv in prev_layer_derivatives:
+                input_deriv += outgoing_weight * prev_layer_deriv
+
+            input_deriv *= self.activation_wrt_weighted_input_derivative(neuron.weighted_input)
+            weighted_input_derivs.append(input_deriv)
+
+        return weighted_input_derivs
+
+    def calculate_gradients(self, data_point):
+        prev_layer_deriv = self.calculate_output_layer_gradients(data_point)
+
+        for layer in reversed(self.network[1:-1]):
+            prev_layer_deriv = self.calculate_hidden_layer_gradients(layer, prev_layer_deriv)
+
+        #y = 0
+        #l = 0
+        #for layer in reversed(self.network):
+        #    n = 0
+        #    l += 1
+        #    for neuron in layer:
+        #        # Compute relevant derivatives
+        #        # derivative of  C with respect to current neuron activation.
+        #        # 2*(a(L)-y)
+        #        #dC = 2(neuron.output - y)
+
+        #        # derivative of current neuron activation with respect to sum of previous layer, i.e. w(L)*a(L-1)+b(L)
+        #        # dReLU(z(L))
+        #        #dA = self.d_relu(z)
+
+        #        # dz(L) with respect to w(L)
+        #        # a(L-1)
+        #        return 0
 
     def train_network(self, training_data):
         # Set how many iterations you want to run this training for
         iterations = 5
 
         # Set your batch size, 100 is a good size
-        batch_size = 5
+        batch_size = 31
         batch_count = int(training_data.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
@@ -212,16 +265,15 @@ class Network:
                     #feed forward the data point
                     self.feed_forward(data_point)
 
-                    #calculate the cost of the data point
-                    loss = self.loss(data_point)
-                    batch_loss += loss
+                    #calculate the loss of the data point
+                    batch_loss += self.loss(data_point)
 
-                    #calculate sensitivities for every data point in the batch
-                    self.back_propagation(data_point) 
+                    #calculate gradients for every data point in the batch
+                    self.calculate_gradients(data_point) 
                     
 
                 #apply gradient descent to every neuron based on the stored sensitivies
-                self.apply_gradient_descent(learning_rate, batch_size)
+                self.apply_all_gradient_descent(learning_rate, batch_size)
 
                 #reset all the stored sensitivities
                 self.reset_sensitivies()
@@ -232,7 +284,7 @@ class Network:
                 #run next batch
                 batch_index += batch_size
                 batch_index_cap += batch_size
-        
+
             print("iteration: ", i, " avg loss: ", overall_loss / batch_count)
 
     def classify(self):
