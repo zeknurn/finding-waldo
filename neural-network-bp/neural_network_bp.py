@@ -1,24 +1,57 @@
 import csv
 import numpy as np
 
+class CSV_Handler:
+    def save_bias_weights(network):
+        print("saving bias and weights")
+
+        headers = ['layer_id', 'neuron_id', 'bias', 'weights']
+        rows = []
+
+        for i in range(0, len(network)):
+            for neuron in network[i]:
+                rows.append([i, neuron.neuron_id, neuron.bias, neuron.weights])
+
+        with open('bias_weights.csv', 'w', newline='') as f:
+
+            # using csv.writer method from CSV package
+            write = csv.writer(f)
+
+            write.writerow(headers)
+            write.writerows(rows)
+
+    def load_bias_weights(network):
+        print("loading bias and weights")
+        import ast
+        with open('bias_weights.csv', newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+
+            # skip first row because it's headers
+            next(reader, None)
+
+            for row in reader:
+                layer = network[int(row[0])]  # first value is the layer id
+                neuron = layer[int(row[1])]  # second value is the neuron id
+                neuron.bias = float(row[2])  # third value is the bias
+                neuron.weights = ast.literal_eval(row[3])  # fourth value is a string that needs to converted to a list
 
 class Neuron:
     def __init__(self):
         self.neuron_id = 0
         self.prev = []
-        self.weighted_input = 0
+        self.weighted_input = 0.0
         self.output = 0
-        self.output_gradient = 0
         self.bias = 1.0
-        self.bias_gradient = 0
+        self.bias_gradient = 0.0
         self.weights = []
         self.weights_gradient = []
+        self.weighted_input_deriv = 0.0
 
     def reset_sensitivies(self):
-        self.output_gradient = 0
-        self.bias_gradient = 0
+        self.output_gradient = 0.0
+        self.bias_gradient = 0.0
         for x in self.weights_gradient:
-            x = 0
+            x = 0.0
 
     #applies gradient descent for the stored incoming weights and bias for this neuron
     def apply_gradient_descent(self, learning_rate, learning_count):
@@ -75,13 +108,12 @@ class Network:
         return 1 * (x > 0)
 
     def feed_forward(self, data_point):
-
         # hook up input layer with the data_point
         for i in range(0, len(data_point) - len(self.network[-1])):
             input_layer = self.network[0]
             input_layer[i].output = data_point[i]
 
-            # calculate output for subsequent layers
+        # calculate output for subsequent layers
         for layer in self.network[1:]:
             for neuron in layer:
                 neuron.output = neuron.bias
@@ -96,39 +128,6 @@ class Network:
             for neuron in self.network[i]:
                 print("layer id: ", i, " neuron id: ", neuron.neuron_id, " inc con:", len(neuron.prev), " bias:",
                       neuron.bias, "weights: ", neuron.weights, "output: ", neuron.output)
-
-    def save_bias_weights(self):
-        print("saving bias and weights")
-
-        headers = ['layer_id', 'neuron_id', 'bias', 'weights']
-        rows = []
-
-        for i in range(0, len(self.network)):
-            for neuron in self.network[i]:
-                rows.append([i, neuron.neuron_id, neuron.bias, neuron.weights])
-
-        with open('bias_weights.csv', 'w', newline='') as f:
-
-            # using csv.writer method from CSV package
-            write = csv.writer(f)
-
-            write.writerow(headers)
-            write.writerows(rows)
-
-    def load_bias_weights(self):
-        print("loading bias and weights")
-        import ast
-        with open('bias_weights.csv', newline='') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-
-            # skip first row because it's headers
-            next(reader, None)
-
-            for row in reader:
-                layer = self.network[int(row[0])]  # first value is the layer id
-                neuron = layer[int(row[1])]  # second value is the neuron id
-                neuron.bias = float(row[2])  # third value is the bias
-                neuron.weights = ast.literal_eval(row[3])  # fourth value is a string that needs to converted to a list
 
     def cost(self, output, expected_output) -> float:
         error = output - expected_output
@@ -163,7 +162,7 @@ class Network:
                 neuron.apply_gradient_descent(learning_rate, learning_count)
 
     def reset_sensitivies(self):
-        for layer in self.network:
+        for layer in self.network[1:]:
             for neuron in layer:
                 neuron.reset_sensitivies()
 
@@ -171,15 +170,11 @@ class Network:
         return 2 * (output - expected_output)
 
     def activation_wrt_weighted_input_derivative(self, weighted_input):
-        if weighted_input > 0:
-            return 1
-        else:
-            return 0
+        return self.d_relu(weighted_input)
 
     def calculate_output_layer_gradients(self, data_point):
         # calculate output layer values
         output_layer = self.network[-1]
-        weighted_input_derivs = []
         for i in range(0, len(output_layer)):
             neuron = output_layer[i]
 
@@ -190,35 +185,44 @@ class Network:
             activation_deriv = self.activation_wrt_weighted_input_derivative(neuron.weighted_input)
 
             #calculate how the weighted input affects the cost
-            weighted_input_deriv = cost_deriv * activation_deriv
-
-            weighted_input_derivs.append(weighted_input_deriv)
+            neuron.weighted_input_deriv = cost_deriv * activation_deriv
 
             #calculate how the weights affects the cost
             for j in range(0, len(neuron.weights)):
-                neuron.weights_gradient[j] += neuron.weights[j] * weighted_input_deriv
+                neuron.weights_gradient[j] += neuron.weights[j] * neuron.weighted_input_deriv
 
             #calculate how the bias affects the cost
-            neuron.bias_gradient += 1 * weighted_input_deriv
+            neuron.bias_gradient += 1 * neuron.weighted_input_deriv
 
-        return weighted_input_derivs
+        return output_layer
 
-    def calculate_hidden_layer_gradients(self, hidden_layer, prev_layer_derivatives):
-        weighted_input_derivs = []
-        for neuron in hidden_layer:
-            for prev_layer_deriv in prev_layer_derivatives:
-                input_deriv += outgoing_weight * prev_layer_deriv
+    def calculate_hidden_layer_gradients(self, hidden_layer, prev_layer):
+        for i in range(0, len(hidden_layer)):
+            neuron = hidden_layer[i]
 
-            input_deriv *= self.activation_wrt_weighted_input_derivative(neuron.weighted_input)
-            weighted_input_derivs.append(input_deriv)
+            #calculate how the weight affects the cost of the previous layer
+            for old_neuron in prev_layer:
+                neuron.weighted_input_deriv += old_neuron.weights[i] * old_neuron.weighted_input_deriv
 
-        return weighted_input_derivs
+            #calculate how the weighted input affects the activation
+            activation_deriv = self.activation_wrt_weighted_input_derivative(neuron.weighted_input)
+
+            neuron.weighted_input_deriv *= activation_deriv
+
+            #calculate how the weights affects the cost
+            for j in range(0, len(neuron.weights)):
+                neuron.weights_gradient[j] += neuron.weights[j] * neuron.weighted_input_deriv
+
+            #calculate how the bias affects the cost
+            neuron.bias_gradient += 1 * neuron.weighted_input_deriv
+
+        return hidden_layer
 
     def calculate_gradients(self, data_point):
-        prev_layer_deriv = self.calculate_output_layer_gradients(data_point)
+        prev_layer = self.calculate_output_layer_gradients(data_point)
 
         for layer in reversed(self.network[1:-1]):
-            prev_layer_deriv = self.calculate_hidden_layer_gradients(layer, prev_layer_deriv)
+            prev_layer = self.calculate_hidden_layer_gradients(layer, prev_layer)
 
         #y = 0
         #l = 0
@@ -244,7 +248,7 @@ class Network:
         iterations = 5
 
         # Set your batch size, 100 is a good size
-        batch_size = 31
+        batch_size = 5
         batch_count = int(training_data.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
@@ -341,8 +345,8 @@ output_layer_size = 2
 # the training data contains both input values and expected output values
 input_layer_size = len(training_data[0]) - output_layer_size
 
-NN.create_network(1, 5, input_layer_size, output_layer_size)
-NN.load_bias_weights()  # if you're changing the layout of the NN, disable the loading of biases and weights for one iteration
+network = NN.create_network(1, 5, input_layer_size, output_layer_size)
+#CSV_Handler.load_bias_weights(network) # if you're changing the layout of the NN, disable the loading of biases and weights for one iteration
 
 NN.train_network(training_data)
 
@@ -351,4 +355,4 @@ print("average loss for all training data: ", average_loss)
 
 # NN.print_neurons()
 # NN.classify()
-NN.save_bias_weights()
+CSV_Handler.save_bias_weights(network)
