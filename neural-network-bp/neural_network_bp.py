@@ -134,25 +134,26 @@ class Network:
 
     def backpropagation(self, data_point):
 
+        vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
+        
         # Output - Hidden
         c_wrt_a2 = []
         for i in range(self.a2.size):
             val = (self.a2[i] - self.get_expected_output(data_point, i)) * 2
             c_wrt_a2.append(val)
 
-        vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
         a2_wrt_z2 = vectorized_d_relu(self.z2)
-        z2_wrt_c = a2_wrt_z2 * c_wrt_a2
-
-        self.w2_gradient = a2_wrt_z2 * self.a1[:, np.newaxis]
-        self.b2_gradients = 1 * z2_wrt_c
+        c_wrt_z2 = a2_wrt_z2 * c_wrt_a2
+        self.w2_gradient = c_wrt_z2 * self.a1[:, np.newaxis]
+        self.b2_gradients = 1 * c_wrt_z2
         # Output - Hidden => Done!
 
         # Hidden - Input
-        a1_wrt_c = self.w2 @ z2_wrt_c
-        z1_wrt_c = vectorized_d_relu(a1_wrt_c)
-        self.w1_gradient = a1_wrt_c * self.a0[:, np.newaxis]
-        self.b1_gradients = 1 * z1_wrt_c
+        c_wrt_a1 = self.w2 @ c_wrt_z2
+        c_wrt_z1 = vectorized_d_relu(c_wrt_a1)
+        self.w1_gradient = c_wrt_z1 * self.a0[:, np.newaxis]
+        self.b1_gradients = 1 * c_wrt_z1
+        # Hidden - Input => Done!
 
     def relu(self, x):
         return max(0.0, x)
