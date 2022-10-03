@@ -95,19 +95,17 @@ class Network:
         self.hidden_output_weights = np.random.uniform(-1, 1, size=(hidden_layer_size, output_layer_size))
 
         # self.input_layer_bias = np.random.uniform(-1,1, size=(1, input_layer_size))
-        self.hidden_layer_bias = np.random.uniform(-1, 1, size=(hidden_layer_size))
-        self.output_layer_bias = np.random.uniform(-1, 1, size=(output_layer_size))
+        self.hidden_layer_bias = np.random.uniform(-1, 1, size=hidden_layer_size)
+        self.output_layer_bias = np.random.uniform(-1, 1, size=output_layer_size)
 
         # Gradients
-        self.input_hidden_gradient = np.empty(shape=(input_layer_size, hidden_layer_size))
-
-        self.hidden_output_gradient = np.empty(shape=(hidden_layer_size, output_layer_size))
-        self.hidden_layer_gradient = np.empty(shape=hidden_layer_size)
-
-        self.output_layer_gradient = np.empty(shape=(output_layer_size))
+        self.input_hidden_gradient_weights = np.empty(shape=(input_layer_size, hidden_layer_size))
+        self.hidden_output_gradient_weights = np.empty(shape=(hidden_layer_size, output_layer_size))
+        self.hidden_layer_gradient_bias = np.empty(shape=hidden_layer_size)
+        self.output_layer_gradient_bias = np.empty(shape=output_layer_size)
         self.layer_count = 3
 
-        # Z
+        # Z, sum of weighted activation + bias.
         self.z_hidden = np.empty(hidden_layer_size)
         self.z_output = np.empty(output_layer_size)
 
@@ -133,24 +131,39 @@ class Network:
         self.z_output = self.output_layer_activation
         self.output_layer_activation = relu_v(self.output_layer_activation)
 
-        print(self.z_output)
-        print(self.output_layer_activation)
+        # print(self.z_output)
+        # print(self.output_layer_activation)
 
     def backpropagation(self, data_point):
 
-        d_cost = []
+        # Output layer to hidden
+        derivative_activation_wr_cost = []
         for i in range(self.output_layer_activation.size):
             val = (self.output_layer_activation[i] - self.get_expected_output(data_point, i)) * 2
-            d_cost.append(val)
+            derivative_activation_wr_cost.append(val)
 
-        v_d_relu = np.vectorize(lambda x: self.d_relu(x))
-        d_z_out = v_d_relu(self.z_output)
-        d_z_hidden = v_d_relu(self.z_hidden)
+        # Weighted sum with respect to cost.
+        vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
+        # Weighted sum with respect to activation
+        derivative_weighted_sum_activation_out = vectorized_d_relu(self.z_output)
+        derivative_weighted_sum_wr_cost_out = derivative_weighted_sum_activation_out * derivative_activation_wr_cost
 
-        z_c_output = d_cost[2] * d_z_out
+        # How much each weight is affected by cost.
+        self.hidden_output_gradient_weights = self.hidden_output_weights * derivative_weighted_sum_wr_cost_out
 
-        for L in range(self.layer_count, 1, - 1):
-            activation = self.activation_layers[L - 1]  # a(L-1)
+        # How much each bias is affected with respect to cost.
+        self.output_layer_gradient_bias = 1 * derivative_weighted_sum_wr_cost_out
+
+        # Hidden to input.
+        # Weight sum for hidden with respect to cost
+        derivative_weighted_sum_activation_hidden = vectorized_d_relu(self.z_hidden)
+        derivative_weighted_sum_wr_cost_hidden = derivative_weighted_sum_wr_cost_out * derivative_weighted_sum_activation_hidden
+
+        # Hidden - how much each weight is affected by cost.
+        self.input_hidden_gradient_weights = self.input_hidden_weights * derivative_weighted_sum_wr_cost_hidden
+
+        # Hidden - How much each bias is affected with respect to cost
+        self.hidden_layer_gradient_bias = 1 * derivative_weighted_sum_wr_cost_hidden
 
     def relu(self, x):
         return max(0.0, x)
