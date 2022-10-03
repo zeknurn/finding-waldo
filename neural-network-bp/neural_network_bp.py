@@ -144,15 +144,15 @@ class Network:
 
         a2_wrt_z2 = vectorized_d_relu(self.z2)
         c_wrt_z2 = a2_wrt_z2 * c_wrt_a2
-        self.w2_gradient = c_wrt_z2 * self.a1[:, np.newaxis]
-        self.b2_gradients = 1 * c_wrt_z2
+        self.w2_gradient += c_wrt_z2 * self.a1[:, np.newaxis]
+        self.b2_gradients += 1 * c_wrt_z2
         # Output - Hidden => Done!
 
         # Hidden - Input
         c_wrt_a1 = self.w2 @ c_wrt_z2
         c_wrt_z1 = vectorized_d_relu(c_wrt_a1)
-        self.w1_gradient = c_wrt_z1 * self.a0[:, np.newaxis]
-        self.b1_gradients = 1 * c_wrt_z1
+        self.w1_gradient += c_wrt_z1 * self.a0[:, np.newaxis]
+        self.b1_gradients += 1 * c_wrt_z1
         # Hidden - Input => Done!
 
     def relu(self, x):
@@ -171,7 +171,6 @@ class Network:
 
     def classify(self):
         print("classification: ", self.a2)
-        return 0
 
     def loss(self, data_point):
         loss = 0.0
@@ -211,7 +210,7 @@ class Network:
         iterations = 200
 
         # Set your batch size, 100 is a good size
-        batch_size = 1
+        batch_size = 2
         batch_count = int(training_data.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
