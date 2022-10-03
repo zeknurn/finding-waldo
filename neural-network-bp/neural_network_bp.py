@@ -81,9 +81,15 @@ def load_data(training_size_percent, testing_size_percent):
 class Network:
 
     def __init__(self, input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size):
+
         self.input_layer_activation = np.empty(input_layer_size)
         self.hidden_layer_activation = np.empty(hidden_layer_size)
         self.output_layer_activation = np.empty(output_layer_size)
+
+        self.activation_layers = []
+        self.activation_layers.append(self.input_layer_activation)
+        self.activation_layers.append(self.hidden_layer_activation)
+        self.activation_layers.append(self.output_layer_activation)
 
         self.input_hidden_weights = np.random.uniform(-1, 1, size=(input_layer_size, hidden_layer_size))
         self.hidden_output_weights = np.random.uniform(-1, 1, size=(hidden_layer_size, output_layer_size))
@@ -99,7 +105,11 @@ class Network:
         self.hidden_layer_gradient = np.empty(shape=hidden_layer_size)
 
         self.output_layer_gradient = np.empty(shape=(output_layer_size))
-        self.layer_count = input_layer_size + hidden_layer_count + output_layer_size
+        self.layer_count = 3
+
+        # Z
+        self.z_hidden = np.empty(hidden_layer_size)
+        self.z_output = np.empty(output_layer_size)
 
     def feed_forward(self, data_point):
         # populate the input layer with the data_point
@@ -112,19 +122,35 @@ class Network:
         #      " hidden_layer_bias.shape: ", self.hidden_layer_bias.shape)
 
         # feed forward the input
+        relu_v = np.vectorize(lambda x: self.relu(x))
         self.hidden_layer_activation = np.matmul(self.input_layer_activation,
                                                  self.input_hidden_weights) + self.hidden_layer_bias
+        self.z_hidden = self.hidden_layer_activation
+        self.hidden_layer_activation = relu_v(self.hidden_layer_activation)
+
         self.output_layer_activation = np.matmul(self.hidden_layer_activation,
                                                  self.hidden_output_weights) + self.output_layer_bias
+        self.z_output = self.output_layer_activation
+        self.output_layer_activation = relu_v(self.output_layer_activation)
+
+        print(self.z_output)
+        print(self.output_layer_activation)
 
     def backpropagation(self, data_point):
 
-        for layer in range(self.layer_count - 1):
-            z_output = np.empty(1, 2)
+        d_cost = []
+        for i in range(self.output_layer_activation.size):
+            val = (self.output_layer_activation[i] - self.get_expected_output(data_point, i)) * 2
+            d_cost.append(val)
 
-            f = lambda x: self.d_relu(x)
-            self.output_layer_gradient = np.vectorize(f, self.output_layer_activation)
-            print(self.output_layer_gradient.shape)
+        v_d_relu = np.vectorize(lambda x: self.d_relu(x))
+        d_z_out = v_d_relu(self.z_output)
+        d_z_hidden = v_d_relu(self.z_hidden)
+
+        z_c_output = d_cost[2] * d_z_out
+
+        for L in range(self.layer_count, 1, - 1):
+            activation = self.activation_layers[L - 1]  # a(L-1)
 
     def relu(self, x):
         return max(0.0, x)
@@ -137,11 +163,12 @@ class Network:
         error = output - expected_output
         return error * error
 
-    def get_expected_output(self, data_point, output_layer, i):
-        return data_point[len(data_point) - len(output_layer) + i]
+    def get_expected_output(self, data_point, i):
+        return data_point[len(data_point) - self.output_layer_activation.size + i]
 
     def classify(self):
-        print("classification: ", self.output_layer_activation)
+        # print("classification: ", self.output_layer_activation)
+        return 0
 
     def loss(self, data_point):
         loss = 0.0
@@ -153,7 +180,7 @@ class Network:
         return loss
 
     def loss_average(self, data_collection):
-        print("calculating average loss")
+        # print("calculating average loss")
 
         total_loss = 0.0
         for data_point in data_collection:
@@ -163,7 +190,7 @@ class Network:
 
     def learn(self, training_data):
         # Set how many iterations you want to run this training for
-        iterations = 5
+        iterations = 1
 
         # Set your batch size, 100 is a good size
         batch_size = 1
@@ -186,7 +213,7 @@ class Network:
                     self.feed_forward(data_point)
 
                     # calculate gradients for every data point in the batch
-                    self.backpropagation(data_point,)
+                    self.backpropagation(data_point)
                     # self.calculate_gradients(data_point)
 
                 # apply gradient descent to every neuron based on the stored sensitivies
@@ -199,7 +226,7 @@ class Network:
                 batch_index += batch_size
                 batch_index_cap += batch_size
 
-           # print("iteration: ", i, " avg loss: ", self.loss_average(training_data))
+        # print("iteration: ", i, " avg loss: ", self.loss_average(training_data))
 
 
 # region old
@@ -355,7 +382,7 @@ NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_lay
 NN.learn(sample_data)
 
 # print("average loss for all training data: ", NN.loss_average(training_data))
-print("average loss for all training data: ", NN.loss_average(sample_data))
+# print("average loss for all training data: ", NN.loss_average(sample_data))
 
 # NN.print_neurons()
 NN.classify()
