@@ -157,13 +157,18 @@ class Network:
         # Hidden to input.
         # Weight sum for hidden with respect to cost
         derivative_weighted_sum_activation_hidden = vectorized_d_relu(self.z_hidden)
-        derivative_weighted_sum_wr_cost_hidden = derivative_weighted_sum_wr_cost_out * derivative_weighted_sum_activation_hidden
+        # derivative_weighted_sum_wr_cost_hidden = derivative_weighted_sum_wr_cost_out * derivative_weighted_sum_activation_hidden
+        print('z hidden:', self.z_hidden.shape)
+        print(derivative_weighted_sum_wr_cost_out.shape)
+        print(derivative_weighted_sum_activation_hidden.shape)
 
         # Hidden - how much each weight is affected by cost.
-        self.input_hidden_gradient_weights = self.input_hidden_weights * derivative_weighted_sum_wr_cost_hidden
+        # self.input_hidden_gradient_weights = self.input_hidden_weights * derivative_weighted_sum_wr_cost_hidden
+        # print(self.input_hidden_weights.shape)
+        # print(derivative_weighted_sum_wr_cost_hidden.shape)
 
         # Hidden - How much each bias is affected with respect to cost
-        self.hidden_layer_gradient_bias = 1 * derivative_weighted_sum_wr_cost_hidden
+        # self.hidden_layer_gradient_bias = 1 * derivative_weighted_sum_wr_cost_hidden
 
     def relu(self, x):
         return max(0.0, x)
