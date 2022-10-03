@@ -134,6 +134,7 @@ class Network:
 
     def backpropagation(self, data_point):
 
+        # Output - Hidden
         c_wrt_a2 = []
         for i in range(self.a2.size):
             val = (self.a2[i] - self.get_expected_output(data_point, i)) * 2
@@ -143,10 +144,15 @@ class Network:
         a2_wrt_z2 = vectorized_d_relu(self.z2)
         z2_wrt_c = a2_wrt_z2 * c_wrt_a2
 
-
-        self.w2_gradient = self.w2 * z2_wrt_c
+        self.w2_gradient = a2_wrt_z2 * self.a1[:, np.newaxis]
         self.b2_gradients = 1 * z2_wrt_c
+        # Output - Hidden => Done!
 
+        # Hidden - Input
+        a1_wrt_c = self.w2 @ z2_wrt_c
+        z1_wrt_c = vectorized_d_relu(a1_wrt_c)
+        self.w1_gradient = a1_wrt_c * self.a0[:, np.newaxis]
+        self.b1_gradients = 1 * z1_wrt_c
 
     def relu(self, x):
         return max(0.0, x)
