@@ -137,11 +137,7 @@ class Network:
         vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
         
         # Output - Hidden
-        c_wrt_a2 = []
-        for i in range(self.a2.size):
-            val = (self.a2[i] - self.get_expected_output(data_point, i)) * 2
-            c_wrt_a2.append(val)
-
+        c_wrt_a2 = self.a2 - self.get_expected_output(data_point) * 2
         a2_wrt_z2 = vectorized_d_relu(self.z2)
         c_wrt_z2 = a2_wrt_z2 * c_wrt_a2
         self.w2_gradient += c_wrt_z2 * self.a1[:, np.newaxis]
@@ -166,18 +162,18 @@ class Network:
         error = output - expected_output
         return error * error
 
-    def get_expected_output(self, data_point, i):
-        return data_point[len(data_point) - self.a2.size + i]
+    def get_expected_output(self, data_point):
+        return data_point[len(data_point) - self.a2.size:]
 
     def classify(self):
         print("classification: ", self.a2)
 
     def loss(self, data_point):
         loss = 0.0
+        expected_output = self.get_expected_output(data_point)
         for i in range(0, len(self.a2)):
             # the expected output are stored at the end of the data_point
-            expected_output = self.get_expected_output(data_point, i)
-            loss += self.cost(self.a2[i], expected_output)
+            loss += self.cost(self.a2[i], expected_output[i])
 
         return loss
 
