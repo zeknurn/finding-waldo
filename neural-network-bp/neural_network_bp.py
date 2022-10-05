@@ -136,31 +136,50 @@ class Network:
 
     def backpropagation(self, data_point):
 
-        vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
-        
-        # Output - Hidden
-        c_wrt_a2 = self.a2 - self.get_expected_output(data_point) * 2
-        a2_wrt_z2 = vectorized_d_relu(self.z2)
-        c_wrt_z2 = a2_wrt_z2 * c_wrt_a2
-        self.w2_gradient += c_wrt_z2 * self.a1[:, np.newaxis]
-        self.b2_gradients += 1 * c_wrt_z2
-        # Output - Hidden => Done!
+        # the delta for the current layer is equal to the delta
+        # of the *previous layer* dotted with the weight matrix
+        # of the current layer, followed by multiplying the delta
+        # by the derivative of the nonlinear activation function
+        # for the activations of the current layer
 
-        # Hidden - Input
-        c_wrt_a1 = self.w2 @ c_wrt_z2
-        c_wrt_z1 = vectorized_d_relu(c_wrt_a1)
-        self.w1_gradient += c_wrt_z1 * self.a0[:, np.newaxis]
-        self.b1_gradients += 1 * c_wrt_z1
-        # Hidden - Input => Done!
+        vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
+
+        dc_a2 = (self.a2 - self.get_expected_output(data_point)) * 2
+        da2_z2 = vectorized_d_relu(self.z2)
+        dz2_w2 = self.a1
+        print('----------------------------')
+        print('dc_a2 - shape:', dc_a2.shape)
+        print('da2_z2 - shape:', da2_z2.shape)
+        print('dz2_w2 - shape:', dz2_w2.shape)
+        p = dz2_w2 @ da2_z2 @ dc_a2
+        # shape (3,0)   (2,0)    (2,0)
+        # För att veta hur vi ska addera dimensioner här bör vi kolla på nästa värde som p ska matrismultipliceras med.
+        # Vilket är dz2_a1 ->
+
+        # Output - Hidden
+        # c_wrt_a2 = (self.a2 - self.get_expected_output(data_point)) * 2
+        # a2_wrt_z2 = vectorized_d_relu(self.z2)
+        # c_wrt_z2 = a2_wrt_z2 * c_wrt_a2
+        # self.w2_gradient += c_wrt_z2 * self.a1[:, np.newaxis]
+        # self.b2_gradients += 1 * c_wrt_z2
+        # # Output - Hidden => Done!
+        #
+        # # Hidden - Input
+        # c_wrt_a1 = self.w2 @ c_wrt_z2
+        # c_wrt_z1 = vectorized_d_relu(c_wrt_a1)
+        # self.w1_gradient += c_wrt_z1 * self.a0[:, np.newaxis]
+        # self.b1_gradients += 1 * c_wrt_z1
+        # # Hidden - Input => Done!
 
         # Gradient checking
-        e = 10**0.004
-        f1 = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0) + e
-        f2 = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0) - e
-        theta = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0)
-        dtheta = (f1 - f2)/(2*e)
-        values = (numpy.linalg.norm(dtheta - theta))/(numpy.linalg.norm(dtheta) + numpy.linalg.norm(theta))
-        print(values)
+        # e = 10**0.004
+        # f1 = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0) + e
+        # f2 = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0) - e
+        # theta = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0)
+        # dtheta = (f1 - f2)/(2*e)
+        # values = (numpy.linalg.norm(dtheta - theta))/(numpy.linalg.norm(dtheta) + numpy.linalg.norm(theta))
+        # print(self.w1_gradient)
+        # print(values)
 
     def relu(self, x):
         return max(0.0, x)
@@ -214,10 +233,10 @@ class Network:
 
     def learn(self, training_data):
         # Set how many iterations you want to run this training for
-        iterations = 200
+        iterations = 100
 
         # Set your batch size, 100 is a good size
-        batch_size = 1
+        batch_size = 2
         batch_count = int(training_data.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
