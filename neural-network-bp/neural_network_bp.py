@@ -144,17 +144,24 @@ class Network:
 
         vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
 
+        # Partial derivatives for cost with respect to w2, hidden-output gradient.
         dc_a2 = (self.a2 - self.get_expected_output(data_point)) * 2
         da2_z2 = vectorized_d_relu(self.z2)
         dz2_w2 = self.a1
+
         print('----------------------------')
         print('dc_a2 - shape:', dc_a2.shape)
         print('da2_z2 - shape:', da2_z2.shape)
         print('dz2_w2 - shape:', dz2_w2.shape)
-        p = dz2_w2 @ da2_z2 @ dc_a2
+        p = da2_z2 @ dc_a2
+        dc2_w2 = dz2_w2 @ da2_z2 @ dc_a2
         # shape (3,0)   (2,0)    (2,0)
-        # För att veta hur vi ska addera dimensioner här bör vi kolla på nästa värde som p ska matrismultipliceras med.
-        # Vilket är dz2_a1 ->
+
+        # Partial derivatives for cost with respect to w1, input-hidden gradient
+        dz2_a1 = self.w2
+        da1_z1 = vectorized_d_relu(self.z1)
+        dz1_w1 = self.a0
+        dc1_w1 = dz1_w1 @ da1_z1 @ dz2_a1 @ p
 
         # Output - Hidden
         # c_wrt_a2 = (self.a2 - self.get_expected_output(data_point)) * 2
