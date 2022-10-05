@@ -1,4 +1,6 @@
 import csv
+
+import numpy
 import numpy as np
 
 
@@ -151,6 +153,15 @@ class Network:
         self.b1_gradients += 1 * c_wrt_z1
         # Hidden - Input => Done!
 
+        # Gradient checking
+        e = 10**0.004
+        f1 = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0) + e
+        f2 = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0) - e
+        theta = numpy.concatenate((self.w1_gradient.flatten(), self.b1_gradients.flatten()), axis=0)
+        dtheta = (f1 - f2)/(2*e)
+        values = (numpy.linalg.norm(dtheta - theta))/(numpy.linalg.norm(dtheta) + numpy.linalg.norm(theta))
+        print(values)
+
     def relu(self, x):
         return max(0.0, x)
 
@@ -206,7 +217,7 @@ class Network:
         iterations = 200
 
         # Set your batch size, 100 is a good size
-        batch_size = 2
+        batch_size = 1
         batch_count = int(training_data.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
