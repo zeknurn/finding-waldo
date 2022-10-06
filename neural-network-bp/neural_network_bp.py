@@ -157,7 +157,7 @@ class Network:
         da1_z1 = vectorized_d_relu(self.z1)
         dz1_w1 = self.a0
 
-        # Matrix multiplication
+        # Matrix multiplication - Cost with respect to weights
         p = (da2_z2 * dc_a2)
         g2 = dc_w2 = dz2_w2.T @ p   # OK!
         dc_a1 = (p @ dz2_a1.T)   # OK!
@@ -165,6 +165,10 @@ class Network:
         g1 = dc_w1 = dz1_w1.T @ dc_z1
         self.w1_gradient = g1
         self.w2_gradient = g2
+
+        # Matrix multiplication - Cost with respect to bias
+        self.b2_gradients = p * 1
+        self.b1_gradients = dc_z1 * 1
 
         # Gradient checking
         # e = 10**0.004
