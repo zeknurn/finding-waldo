@@ -159,26 +159,17 @@ class Network:
         dc_a2 = (self.a2 - y) * 2
         da2_z2 = vectorized_d_relu(self.z2)
         dz2_w2 = self.a1
-
-        print('----------------------------')
-        print('dc_a2 - shape:', dc_a2.shape)
-        print('da2_z2 - shape:', da2_z2.shape)
-        print('dz2_w2 - shape:', dz2_w2.shape)
-        p = da2_z2 * dc_a2
-        dc2_w2 = np.dot(dz2_w2.T, da2_z2 * dc_a2) 
-        # shape (4,3)   (4,2)    (4,2)
-        self.w2_gradient += dc2_w2
-        #self.b2_gradients += 1 * da2_z2
+        p = da2_z2 @ dc_a2
+        # g2 = dc2_w2 = dz2_w2 @ da2_z2 @ dc_a2
+        # shape (3,0)   (2,0)    (2,0)
 
         # Partial derivatives for cost with respect to w1, input-hidden gradient
         dz2_a1 = self.w2
         da1_z1 = vectorized_d_relu(self.z1)
         dz1_w1 = self.a0
-        dc1_w1 = np.dot(dz1_w1.T, da1_z1) * dz2_a1 * p
-        # shape (4,2)   (4,3)   (3,2)   (4,2)      
 
-        self.w1_gradient += dc1_w1
-        #self.b1_gradients += 1 * da1_z1
+        # g1 = c1_w1 = dz1_w1 @ da1_z1 @ dz2_a1 @ p
+        #               (2,0)   (3,0)   (3,2)     ?
 
         # Output - Hidden
         # c_wrt_a2 = (self.a2 - self.get_expected_output(data_point)) * 2
