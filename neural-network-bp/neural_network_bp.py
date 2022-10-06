@@ -147,44 +147,24 @@ class Network:
 
     def backpropagation(self, y):
 
-        # the delta for the current layer is equal to the delta
-        # of the *previous layer* dotted with the weight matrix
-        # of the current layer, followed by multiplying the delta
-        # by the derivative of the nonlinear activation function
-        # for the activations of the current layer
-
         vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
 
-        # Partial derivatives for cost with respect to w2, hidden-output gradient.
+        # Partial derivatives
         dc_a2 = (self.a2 - y) * 2
         da2_z2 = vectorized_d_relu(self.z2)
         dz2_w2 = self.a1
-        p = da2_z2 * dc_a2
-        # g2 = dc2_w2 = dz2_w2 @ da2_z2 @ dc_a2
-        # shape (3,0)   (2,0)    (2,0)
-
-        # Partial derivatives for cost with respect to w1, input-hidden gradient
         dz2_a1 = self.w2
         da1_z1 = vectorized_d_relu(self.z1)
         dz1_w1 = self.a0
 
-        # g1 = c1_w1 = dz1_w1 @ da1_z1 @ dz2_a1 @ p
-        #               (2,0)   (3,0)   (3,2)     ?
-
-        # Output - Hidden
-        # c_wrt_a2 = (self.a2 - self.get_expected_output(data_point)) * 2
-        # a2_wrt_z2 = vectorized_d_relu(self.z2)
-        # c_wrt_z2 = a2_wrt_z2 * c_wrt_a2
-        # self.w2_gradient += c_wrt_z2 * self.a1[:, np.newaxis]
-        # self.b2_gradients += 1 * c_wrt_z2
-        # # Output - Hidden => Done!
-        #
-        # # Hidden - Input
-        # c_wrt_a1 = self.w2 @ c_wrt_z2
-        # c_wrt_z1 = vectorized_d_relu(c_wrt_a1)
-        # self.w1_gradient += c_wrt_z1 * self.a0[:, np.newaxis]
-        # self.b1_gradients += 1 * c_wrt_z1
-        # # Hidden - Input => Done!
+        # Matrix multiplication
+        p = (da2_z2 * dc_a2)
+        g2 = dc_w2 = dz2_w2.T @ p   # OK!
+        dc_a1 = (p @ dz2_a1.T)   # OK!
+        dc_z1 = da1_z1 * dc_a1
+        g1 = dc_w1 = dz1_w1.T @ dc_z1
+        self.w1_gradient = g1
+        self.w2_gradient = g2
 
         # Gradient checking
         # e = 10**0.004
