@@ -103,8 +103,8 @@ class Network:
 
         self.w1 = np.random.uniform(-1, 1, size=(input_layer_size, hidden_layer_size))
         self.w2 = np.random.uniform(-1, 1, size=(hidden_layer_size, output_layer_size))
-        self.b1 = np.random.uniform(-1, 1, size=(4, hidden_layer_size))
-        self.b2 = np.random.uniform(-1, 1, size=(4, output_layer_size))
+        self.b1 = np.random.uniform(-1, 1, size=(2, hidden_layer_size))
+        self.b2 = np.random.uniform(-1, 1, size=(2, output_layer_size))
         #self.b0 = np.random.uniform(-1,1, size=(1, input_layer_size))
 
         #self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
@@ -212,9 +212,9 @@ class Network:
 
     def apply_gradient_descent(self, learning_rate, learning_count):
         #weights
-        print("_________________")
-        print("w1 grad:", self.w1_gradient)
-        print("w2 grad:", self.w2_gradient)
+        #print("_________________")
+        #print("w1 grad:", self.w1_gradient)
+        #print("w2 grad:", self.w2_gradient)
         self.w2 = self.w2 - learning_rate * (self.w2_gradient / learning_count)
         self.w1 = self.w1 - learning_rate * (self.w1_gradient / learning_count)
 
@@ -230,30 +230,34 @@ class Network:
 
     def learn(self, x, y):
         # Set how many iterations you want to run this training for
-        epochs = 5
+        epochs = 10000
 
         # Set your batch size, 100 is a good size
-        batch_size = 1
+        batch_size = 2
         batch_count = int(x.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
-        learning_rate = 0.1
+        learning_rate = 0.0001
 
         for i in range(0, epochs):
-            for j in range(0, batch_count):
+
+            x_batch = np.split(x, batch_count)
+            y_batch = np.split(y, batch_count)
+
+            for j in range(0, len(x_batch)):
                 # feed forward the batch
-                self.feed_forward(x)
+                self.feed_forward(x_batch[j])
 
                 # calculate gradients for every data point in the batch
-                self.backpropagation(y)
+                self.backpropagation(y_batch[j])
 
                 # apply gradient descent to weights and biases using the stored gradients
-                self.apply_gradient_descent(learning_rate, batch_size)
+                self.apply_gradient_descent(learning_rate, x_batch[j].size)
 
                 # reset all the stored gradients
                 self.reset_gradients()
 
-            print("iteration: ", i, " avg loss: ", self.loss_average(y))
+            print("epoch: ", i, " avg loss: ", self.loss_average(y))
 
 
 # remainder becomes validation data. sum of batches must not exceed 100%
