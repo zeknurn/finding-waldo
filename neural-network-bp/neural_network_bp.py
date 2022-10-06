@@ -159,7 +159,7 @@ class Network:
         dc_a2 = (self.a2 - y) * 2
         da2_z2 = vectorized_d_relu(self.z2)
         dz2_w2 = self.a1
-        p = da2_z2 @ dc_a2
+        p = da2_z2 * dc_a2
         # g2 = dc2_w2 = dz2_w2 @ da2_z2 @ dc_a2
         # shape (3,0)   (2,0)    (2,0)
 
@@ -213,7 +213,7 @@ class Network:
     def loss(self, y_1) -> float:
         loss = 0.0
         for i in range(0, self.a2.shape[1]):
-            loss += self.cost(self.a2[i], y_1[i])
+            loss += self.cost(self.a2[1][i], y_1[i])
 
         return loss
 
@@ -243,10 +243,10 @@ class Network:
 
     def learn(self, x, y):
         # Set how many iterations you want to run this training for
-        iterations = 1000
+        iterations = 1
 
         # Set your batch size, 100 is a good size
-        batch_size = 2
+        batch_size = 4
         batch_count = int(x.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
