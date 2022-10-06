@@ -103,8 +103,8 @@ class Network:
 
         self.w1 = np.random.uniform(-1, 1, size=(input_layer_size, hidden_layer_size))
         self.w2 = np.random.uniform(-1, 1, size=(hidden_layer_size, output_layer_size))
-        self.b1 = np.random.uniform(-1, 1, size=(1, hidden_layer_size))
-        self.b2 = np.random.uniform(-1, 1, size=(1, output_layer_size))
+        self.b1 = np.random.uniform(-1, 1, size=(4, hidden_layer_size))
+        self.b2 = np.random.uniform(-1, 1, size=(4, output_layer_size))
         #self.b0 = np.random.uniform(-1,1, size=(1, input_layer_size))
 
         #self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
@@ -163,12 +163,12 @@ class Network:
         dc_a1 = (p @ dz2_a1.T)   # OK!
         dc_z1 = da1_z1 * dc_a1
         g1 = dc_w1 = dz1_w1.T @ dc_z1
-        self.w1_gradient = g1
-        self.w2_gradient = g2
+        self.w1_gradient += g1
+        self.w2_gradient += g2
 
         # Matrix multiplication - Cost with respect to bias
-        self.b2_gradients = p * 1
-        self.b1_gradients = dc_z1 * 1
+        self.b2_gradients += p * 1
+        self.b1_gradients += dc_z1 * 1
 
         # Gradient checking
         # e = 10**0.004
@@ -212,6 +212,9 @@ class Network:
 
     def apply_gradient_descent(self, learning_rate, learning_count):
         #weights
+        print("_________________")
+        print("w1 grad:", self.w1_gradient)
+        print("w2 grad:", self.w2_gradient)
         self.w2 = self.w2 - learning_rate * (self.w2_gradient / learning_count)
         self.w1 = self.w1 - learning_rate * (self.w1_gradient / learning_count)
 
@@ -222,21 +225,21 @@ class Network:
     def reset_gradients(self):
         self.w1_gradient = np.empty(shape=(input_layer_size, hidden_layer_size))
         self.w2_gradient = np.empty(shape=(hidden_layer_size, output_layer_size))
-        self.b1_gradients = np.empty(shape=hidden_layer_size)
-        self.b2_gradients = np.empty(shape=output_layer_size)
+        self.b1_gradients = np.empty(shape=self.b1.shape)
+        self.b2_gradients = np.empty(shape=self.b2.shape)
 
     def learn(self, x, y):
         # Set how many iterations you want to run this training for
-        iterations = 1
+        epochs = 5
 
         # Set your batch size, 100 is a good size
-        batch_size = 4
+        batch_size = 1
         batch_count = int(x.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
         learning_rate = 0.1
 
-        for i in range(0, iterations):
+        for i in range(0, epochs):
             for j in range(0, batch_count):
                 # feed forward the batch
                 self.feed_forward(x)
@@ -256,12 +259,26 @@ class Network:
 # remainder becomes validation data. sum of batches must not exceed 100%
 #x_train, x_test, x_valid, y_train, y_test, y_valid = load_data(training_size_percent=80, testing_size_percent=10)
 
-x_sample = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0], [0.0, 1.0]])
-y_sample = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0], [0.0, 1.0]])
+#x_sample = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0], [0.0, 1.0]])
+#y_sample = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0], [0.0, 1.0]])
+
+# XOR training data
+x_sample = np.array([
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1],
+])
+
+# XOR expected labels
+y_sample = np.atleast_2d([0, 1, 1, 0]).T
+
+print('X.shape:', x_sample.shape)
+print('y.shape:', y_sample.shape)
 
 input_layer_size = x_sample.shape[1]
 hidden_layer_count = 1
-hidden_layer_size = 3
+hidden_layer_size = 2
 output_layer_size = y_sample.shape[1]
 # the training data contains both input values and expected output values
 #input_layer_size = len(training_data[0]) - output_layer_size
