@@ -1,7 +1,6 @@
 import csv
 from tkinter import X
 
-import numpy
 import numpy as np
 
 
@@ -90,11 +89,11 @@ def load_data(training_size_percent, testing_size_percent):
 
 class Network:
 
-    def __init__(self, input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size):
+    def __init__(self, input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size, batch_size):
 
-        self.a0 = np.empty(shape=(1, input_layer_size))
-        self.a1 = np.empty(shape=(1, hidden_layer_size))
-        self.a2 = np.empty(shape=(1, output_layer_size))
+        self.a0 = np.empty(shape=(batch_size, input_layer_size))
+        self.a1 = np.empty(shape=(batch_size, hidden_layer_size))
+        self.a2 = np.empty(shape=(batch_size, output_layer_size))
 
         self.activation_layers = []
         self.activation_layers.append(self.a0)
@@ -103,8 +102,8 @@ class Network:
 
         self.w1 = np.random.uniform(-1, 1, size=(input_layer_size, hidden_layer_size))
         self.w2 = np.random.uniform(-1, 1, size=(hidden_layer_size, output_layer_size))
-        self.b1 = np.random.uniform(-1, 1, size=(2, hidden_layer_size))
-        self.b2 = np.random.uniform(-1, 1, size=(2, output_layer_size))
+        self.b1 = np.random.uniform(-1, 1, size=(batch_size, hidden_layer_size))
+        self.b2 = np.random.uniform(-1, 1, size=(batch_size, output_layer_size))
         #self.b0 = np.random.uniform(-1,1, size=(1, input_layer_size))
 
         #self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
@@ -187,6 +186,12 @@ class Network:
     def d_relu(self, x):
         return 1 * (x > 0)
 
+    def sigmoid(self, z):
+        return 1 / (1 + np.exp(-z))
+
+    def d_sigmoid(self, z):
+        return self.sigmoid * (1 - self.sigmoid(z))
+
     def classify(self):
         print("classification: ", self.a2)
 
@@ -197,7 +202,7 @@ class Network:
     def loss(self, y_1) -> float:
         loss = 0.0
         for i in range(0, self.a2.shape[1]):
-            loss += self.cost(self.a2[1][i], y_1[i])
+            loss += self.cost(self.a2[0][i], y_1[i])
 
         return loss
 
@@ -228,16 +233,14 @@ class Network:
         self.b1_gradients = np.empty(shape=self.b1.shape)
         self.b2_gradients = np.empty(shape=self.b2.shape)
 
-    def learn(self, x, y):
+    def learn(self, x, y, batch_size):
         # Set how many iterations you want to run this training for
         epochs = 10000
 
-        # Set your batch size, 100 is a good size
-        batch_size = 2
         batch_count = int(x.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
-        learning_rate = 0.0001
+        learning_rate = 0.01
 
         for i in range(0, epochs):
 
@@ -284,17 +287,14 @@ input_layer_size = x_sample.shape[1]
 hidden_layer_count = 1
 hidden_layer_size = 2
 output_layer_size = y_sample.shape[1]
-# the training data contains both input values and expected output values
-#input_layer_size = len(training_data[0]) - output_layer_size
+batch_size = 4 # needs to be evenly divideable by training size atm
 
-NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size)
+NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size, batch_size)
 
 # CSV_Handler.load_bias_weights(network) # if you're changing the layout of the NN, disable the loading of biases and
 # weights for one iteration
 
-# NN.feed_forward(sample_data)
-
-NN.learn(x_sample, y_sample)
+NN.learn(x_sample, y_sample, batch_size)
 
 # print("average loss for all training data: ", NN.loss_average(training_data))
 # print("average loss for all training data: ", NN.loss_average(sample_data))
