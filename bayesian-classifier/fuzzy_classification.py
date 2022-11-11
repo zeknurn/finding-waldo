@@ -1,7 +1,7 @@
 import copy
 
-import numpy
-from fcmeans import FCM
+import numpy as np
+import skfuzzy as fuzz
 from os import listdir
 import matplotlib.pyplot as plt
 import cv2
@@ -11,28 +11,31 @@ import cv2
 # Similar to k-Means but fuzzy. I.e. one cluster can partially belong to other clusters.
 
 def run_fuzzy_classification(path, clusters):
+    count = 0
     for file in listdir(path):
-        image_path = path + '/' + file
-        rgb_image = plt.imread(image_path)
-        fcm = FCM(n_cluster=clusters)
-        b, g, r = cv2.split(rgb_image)
+        if count != 1:
+            # image_path = path + '/' + file
+            # image = plt.imread(image_path)
+            # X = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            # fcm = FCM(n_clusters=2)
+            # fcm.fit(X)
+            # fcm_centers = fcm.centers
+            # fcm_labels = fcm.predict(X)
+            #
+            # cv2.imshow('Gray image', X)
+            # cv2.waitKey(0)
 
-        fcm.fit(r)
-        r_clusters = copy.copy(fcm)
-        # g_clusters = copy.deepcopy(fcm.fit(g))
-        # b_clusters = copy.deepcopy(fcm.fit(b))
 
-        # result
-        # fcm_centers = r_clusters.centers
-        # fcm_labels = fcm.predict(r)
-        #
-        # # plot
-        # f, axes = plt.subplots(1, 2, figsize=(11, 5))
-        # axes[0].scatter(r[:, 0], r[:, 1], alpha=.1)
-        # axes[1].scatter(r[:, 0], r[:, 1], c=fcm_labels, alpha=.1)
-        # axes[1].scatter(fcm_centers[:, 0], fcm_centers[:, 1], marker="+", s=500, c='w')
-        # plt.savefig('images/basic-clustering-output.jpg')
-        # plt.show()
+            # https://towardsdatascience.com/image-segmentation-with-clustering-b4bbc98f2ee6
+            # Initialize probability matrix randomly - dimensions of image.
+
+            # Calculate the center of clusters, i.e. centoids
+
+            # Calculate new probabilities according to the new center of clusters.
+
+            # Repeat 2 and 3 untill the centers doesn't change.
+
+            count = count + 1
 
 
 path = "C:/Users/Vryds/Desktop/wheres-waldo/Hey-Waldo/64/waldo"
