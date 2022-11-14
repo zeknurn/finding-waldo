@@ -1,7 +1,25 @@
+# Naive Bayesian Classifier.
+import random
 
-# Gray level co-occurance matrix.
-# -> Probability of glasses, or the shape of glasses, in the image.
+# Prior probability of seeing waldo, i.e. the ratio of waldo images to non-waldo images in our training set.
+# Set arbitrarily to 20%
+prior_waldo = 0.2
+prior_not_waldo = 1 - prior_waldo
 
-# Predict waldo or not waldo
-# gaussian naive bayesian classifier
-# multinominal naive bayes classifier
+# Probability of containing waldo given the image we are looking at contains waldo, i.e:
+# P(Glasses | Waldo)
+
+# Probability of the same feature given that the image we are looking at does not contain waldo:
+# P(Glasses | Not Waldo)
+
+# Thereafter each we calculate a score for each image.
+# A = P(Waldo) * P(Glasses | Waldo) * P(... | Waldo)
+# B = P(Not Waldo) * P(Glasses | Not Waldo) * P(... | Not Waldo)
+# If A > B, then we classify the image as containing Waldo.
+
+# We first need to split the data into a training, and testing set.
+
+# We then need to look at each image individually and determine the probability of each feature:
+# given Waldo, and not Waldo.
+
+# Then we calculate the score for that image, and compare our result with the actual answer.
