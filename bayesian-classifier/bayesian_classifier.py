@@ -1,5 +1,8 @@
 # Naive Bayesian Classifier.
+import os
 import feature_extraction
+import pandas as pd
+import numpy
 
 # Prior probability of seeing waldo, i.e. the ratio of waldo images to non-waldo images in our training set.
 # Set arbitrarily to 20%
@@ -8,8 +11,21 @@ prior_not_waldo = 1 - prior_waldo
 
 glcm_waldo = 0.9997621193910255
 avg_glcm_waldo = 0.0038158859518741435
+
 glcm_notwaldo = 1.007062237607153
 avg_glcm_notwaldo = 0.003843748998500584
+
+# Basic first draft of naive bayesian
+path = 'C:/Users/Vryds/Desktop/Training/both'
+for file in os.listdir(path):
+    feature_extraction.gray_scale_cooccurance_single_image(file, 'tmp_out.csv')
+
+    df = pd.read_csv('tmp_out.csv')
+    count = numpy.count_nonzero(df)
+    glcm_sum = df.to_numpy().sum()
+
+    p_glcm_single = glcm_sum / count
+
 
 # Probability of containing waldo, i.e. a waldo specific feature, given the image we are looking at contains waldo, i.e:
 # P(Glasses | Waldo)
