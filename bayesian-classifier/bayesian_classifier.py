@@ -14,9 +14,10 @@ avg_glcm_notwaldo = 0.003843748998500584
 # Probability of containing waldo, i.e. a waldo specific feature, given the image we are looking at contains waldo, i.e:
 # P(Glasses | Waldo)
 
-# The glcm score of the image, divided by the total avg. gclm score of all waldo images.
-# The the times money appear in the spam message, divided by all the words in the spam message.
-# the glcm value, divided by all the glcm values in the waldo image. p(glcm | waldo)
+# The times money appear in the spam message, divided by all the words in the spam message.
+# the sum glcm value, divided by the count of the glcm values in the waldo image. p(glcm | waldo)
+# OR each glcm value, divided by the count of glcm values, think of each glcm value as a word, or feature ->
+# p(waldo) * p(glcm1 | waldo) * p(glcm2 | waldo)... etc.
 
 # Probability of the same feature given that the image we are looking at does not contain waldo:
 # P(Glasses | Not Waldo)

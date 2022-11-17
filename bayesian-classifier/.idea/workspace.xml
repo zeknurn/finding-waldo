@@ -4,6 +4,7 @@
     <list default="true" id="11eea3be-3230-4ebd-866c-dc57be1e17f3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bayesian_classifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/bayesian_classifier.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gclm_preprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/gclm_preprocessing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/probabilities.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/probabilities.xlsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
