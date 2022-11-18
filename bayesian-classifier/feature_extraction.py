@@ -48,20 +48,20 @@ def gray_scale_cooccurance(path, feature_filename):
 
 def gray_scale_cooccurance_single_image(path_to_image, out_file_name):
     with open(out_file_name, 'w') as f:
-        glcm = np.empty((256, 256, 1, 1))
-        image = imread(path, as_gray=True)
-        glcm += graycomatrix(img_as_ubyte(image), distances=[0], angles=[0],
+        # glcm = np.empty((256, 256, 1, 1))
+        image = imread(path_to_image, as_gray=True)
+        glcm = graycomatrix(img_as_ubyte(image), distances=[0], angles=[0],
                              symmetric=True, normed=True)
         np.savetxt(f, glcm[:, :, 0, 0], delimiter=',')
 
 
 #with waldo
-path = get_path("path_waldo.txt")
-gray_scale_cooccurance(path, "probabilities_waldo.csv")
-
-#without waldo
-path = get_path("path_notwaldo.txt")
-gray_scale_cooccurance(path, "probabilities_notwaldo.csv")
+# path = get_path("path_waldo.txt")
+# gray_scale_cooccurance(path, "probabilities_waldo.csv")
+#
+# #without waldo
+# path = get_path("path_notwaldo.txt")
+# gray_scale_cooccurance(path, "probabilities_notwaldo.csv")
 
 
 #prewitt_kernel(path)

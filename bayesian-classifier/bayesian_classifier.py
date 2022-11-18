@@ -1,49 +1,105 @@
 # Naive Bayesian Classifier.
 import os
+
+import numpy as np
+
 import feature_extraction
 import pandas as pd
 import numpy
 
 # Prior probability of seeing waldo, i.e. the ratio of waldo images to non-waldo images in our training set.
 # Set arbitrarily to 20%
-prior_waldo = 0.2
-prior_not_waldo = 1 - prior_waldo
 
-glcm_waldo = 0.9997621193910255
-avg_glcm_waldo = 0.0038158859518741435
 
-glcm_notwaldo = 1.007062237607153
-avg_glcm_notwaldo = 0.003843748998500584
+# glcm_waldo = 0.9997621193910255
+# avg_glcm_waldo = 0.0038158859518741435
+#
+# glcm_notwaldo = 1.007062237607153
+# avg_glcm_notwaldo = 0.003843748998500584
 
 # Basic first draft of naive bayesian
-path = 'C:/Users/Vryds/Desktop/Training/both'
-for file in os.listdir(path):
-    feature_extraction.gray_scale_cooccurance_single_image(file, 'tmp_out.csv')
-
-    df = pd.read_csv('tmp_out.csv')
-    count = numpy.count_nonzero(df)
-    glcm_sum = df.to_numpy().sum()
-
-    p_glcm_single = glcm_sum / count
 
 
-# Probability of containing waldo, i.e. a waldo specific feature, given the image we are looking at contains waldo, i.e:
-# P(Glasses | Waldo)
+prior_waldo = 0.2
+prior_not_waldo = 1 - prior_waldo
+prior_glcm_waldo = pd.read_csv('probabilities_waldo.csv', sep=',', header=None)
+prior_glcm_notwaldo = pd.read_csv('probabilities_notwaldo.csv', sep=',', header=None)
+# prior_glcm_waldo = prior_glcm_waldo.replace(0.0, 1.0)
 
-# The times money appear in the spam message, divided by all the words in the spam message.
-# the sum glcm value, divided by the count of the glcm values in the waldo image. p(glcm | waldo)
-# OR each glcm value, divided by the count of glcm values, think of each glcm value as a word, or feature ->
-# p(waldo) * p(glcm1 | waldo) * p(glcm2 | waldo)... etc.
 
-# Probability of the same feature given that the image we are looking at does not contain waldo:
-# P(Glasses | Not Waldo)
+# path = 'C:/Users/Vryds/Desktop/Training/both1'
+path = 'C:/Users/Vryds/Desktop/wheres-waldo/Hey-Waldo/64/waldo'
 
-# Thereafter each we calculate a score for each image.
-# A = P(Waldo) * P(Glasses | Waldo) * P(... | Waldo)
-# B = P(Not Waldo) * P(Glasses | Not Waldo) * P(... | Not Waldo)
-# If A > B, then we classify the image as containing Waldo.
+def bayesian(prior_glcm_waldo, prior_glcm_notwaldo):
+    count = 0
+    score = 0
+    for file in os.listdir(path):
 
-# We first need to split the data into a training, and testing set.
+        feature_extraction.gray_scale_cooccurance_single_image(path + '/' + file, 'tmp_out.csv')
+        current_glcm = pd.read_csv('tmp_out.csv', sep=',', header=None)
+        # current_glcm.replace(0, 1)
 
-# We then need to look at each image individually and determine the probability of each feature:
-# given Waldo, and not Waldo.
+        # print('Current: ', current_glcm.shape)
+        # print('Prior: ', prior_glcm_waldo.shape)
+
+        score_a = np.dot(current_glcm, prior_glcm_waldo)
+        score_b = np.dot(current_glcm, prior_glcm_notwaldo)
+        prior_glcm_waldo = score_a
+        prior_glcm_notwaldo = score_b
+
+        tmp_a = 1.0
+        for j in range(0, score_a.shape[0]):
+            for i in range(0, score_a.shape[1]):
+                if score_a[i, j] != 0:
+                    tmp_tmp = tmp_a
+                    if tmp_tmp * score_a[i, j] != 0:
+                        tmp_a *= score_a[i, j]
+                    else:
+                        break
+
+        tmp_b = 1.0
+        for j in range(0, score_b.shape[0]):
+            for i in range(0, score_b.shape[1]):
+                if score_b[i, j] != 0:
+                    tmp_tmp = tmp_b
+                    if tmp_tmp * score_b[i, j] != 0:
+                        tmp_b *= score_b[i, j]
+                    else:
+                        break
+
+        true = 1
+        guess = 0
+        # 24, both, 39 both1
+        # if count >= 39:
+        #     print('True image does not contain Waldo')
+        #     true = 0
+        # else:
+        #     print('True image contains Waldo')
+        #     true = 1
+
+        if tmp_a > tmp_b:
+            print(count, ': I guess  Waldo')
+            guess = 1
+        else:
+            print(count, ': I guess not Waldo')
+            guess = 0
+
+        if guess == true:
+            score += 1
+
+        count += 1
+        print('Score A:', tmp_a)
+        print('Score B:', tmp_b)
+
+    print('Total score: ', score, 'out of ', count)
+    print(score/count, '% Accuracy')
+    return prior_glcm_waldo, prior_glcm_notwaldo
+
+for i in range(0, 10):
+    prior_glcm_waldo, prior_glcm_notwaldo = bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
+
+
+# bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
+# bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
+# bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
+# bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
