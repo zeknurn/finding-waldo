@@ -6,6 +6,7 @@ from skimage.feature import graycomatrix
 from skimage import img_as_ubyte
 import matplotlib.pyplot as plt
 from os import listdir
+import cv2
 #%matplotlib inline
 
 def get_path(filename):
@@ -55,8 +56,79 @@ def gray_scale_cooccurance_single_image(path_to_image, out_file_name):
         np.savetxt(f, glcm[:, :, 0, 0], delimiter=',')
 
 
+def get_hsv_limits(bgr_value, range_value):
+        color = np.uint8([[bgr_value]])
+
+        # convert the color to HSV
+        hsvColor = cv2.cvtColor(color, cv2.COLOR_BGR2HSV)
+
+        # display the color values
+        print("BGR:", color)
+        print("HSV:", hsvColor)
+
+        # Compute the lower and upper limits
+        lowerLimit = (int)(hsvColor[0][0][0]) - range_value, 100, 100
+        upperLimit = (int)(hsvColor[0][0][0]) + range_value, 255, 255
+
+        # display the lower and upper limits
+        print("Lower Limit:",lowerLimit)
+        print("Upper Limit", upperLimit)
+
+        return lowerLimit, upperLimit
+
+
+def extract_color_proportion(path, filename):
+        with open(filename, 'w') as f:
+            for file in listdir(path):
+                    # load image
+                    image_path = path + '/' + file
+                    img = cv2.imread(image_path)
+
+                    # convert to HSV
+                    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+                    h,s,v = cv2.split(hsv)
+
+                    #waldo red
+                    print("red")
+                    lower, upper = get_hsv_limits([81, 68, 214], 10)
+
+                    #waldo white
+                    print("white")
+                    #lower, upper = get_hsv_limits([250, 255, 237], 40)
+
+                    #waldo skin
+                    print("skin")
+                    #lower, upper = get_hsv_limits([168, 187, 244], 10)
+
+                    #waldo hair
+                    print("hair")
+                    #lower, upper = get_hsv_limits([54, 37, 40], 30)
+                    
+                    # create mask for blue color in hsv
+                    # blue is 240 in range 0 to 360, so for opencv it would be 120
+                    mask = cv2.inRange(hsv, lower, upper)
+
+                    # count non-zero pixels in mask
+                    count=np.count_nonzero(mask)
+                    print('filename:', file,'count:', count)
+
+                    # save output
+                    cv2.imwrite('mask.png', mask)
+
+                    # Display various images to see the steps
+                    cv2.imshow('mask',mask)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
+                    break
+
+
+            #np.savetxt(f, glcm[:, :, 0, 0], delimiter=',')
+
+
+
 #with waldo
-# path = get_path("path_waldo.txt")
+path = get_path("path_waldo.txt")
+extract_color_proportion(path, "color.csv")
 # gray_scale_cooccurance(path, "probabilities_waldo.csv")
 #
 # #without waldo
