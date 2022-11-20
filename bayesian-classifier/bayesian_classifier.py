@@ -1,36 +1,17 @@
 # Naive Bayesian Classifier.
+from cmath import e
 import os
-
 import numpy as np
-
 import feature_extraction
 import pandas as pd
-import numpy
 
-# Prior probability of seeing waldo, i.e. the ratio of waldo images to non-waldo images in our training set.
-# Set arbitrarily to 20%
+def get_path(filename):
+    f = open(filename)
+    text = f.read()
+    f.close()
+    return text
 
-
-# glcm_waldo = 0.9997621193910255
-# avg_glcm_waldo = 0.0038158859518741435
-#
-# glcm_notwaldo = 1.007062237607153
-# avg_glcm_notwaldo = 0.003843748998500584
-
-# Basic first draft of naive bayesian
-
-
-prior_waldo = 0.2
-prior_not_waldo = 1 - prior_waldo
-prior_glcm_waldo = pd.read_csv('probabilities_waldo.csv', sep=',', header=None)
-prior_glcm_notwaldo = pd.read_csv('probabilities_notwaldo.csv', sep=',', header=None)
-# prior_glcm_waldo = prior_glcm_waldo.replace(0.0, 1.0)
-
-
-# path = 'C:/Users/Vryds/Desktop/Training/both1'
-path = 'C:/Users/Vryds/Desktop/wheres-waldo/Hey-Waldo/64/waldo'
-
-def bayesian(prior_glcm_waldo, prior_glcm_notwaldo):
+def bayesian_glcm(path, prior_glcm_waldo, prior_glcm_notwaldo):
     count = 0
     score = 0
     for file in os.listdir(path):
@@ -69,16 +50,16 @@ def bayesian(prior_glcm_waldo, prior_glcm_notwaldo):
 
         true = 1
         guess = 0
-        # 24, both, 39 both1
-        # if count >= 39:
-        #     print('True image does not contain Waldo')
-        #     true = 0
-        # else:
-        #     print('True image contains Waldo')
-        #     true = 1
+        #24, both, 39 both1
+        #if count >= 39:
+        #    print('True image does not contain Waldo')
+        #    true = 0
+        #else:
+        #    print('True image contains Waldo')
+        #    true = 1
 
         if tmp_a > tmp_b:
-            print(count, ': I guess  Waldo')
+            print(count, ': I guess Waldo')
             guess = 1
         else:
             print(count, ': I guess not Waldo')
@@ -95,11 +76,80 @@ def bayesian(prior_glcm_waldo, prior_glcm_notwaldo):
     print(score/count, '% Accuracy')
     return prior_glcm_waldo, prior_glcm_notwaldo
 
-for i in range(0, 10):
-    prior_glcm_waldo, prior_glcm_notwaldo = bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
+
+def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo, is_waldo, total_count):
+    red_count, white_count, skin_count, hair_count = feature_extraction.extract_color_proportion_single_image(path, file)
+    #prior is red, white, skin, hair
+    p_waldo = prior_color_waldo.iloc[0,0] #* p(red|waldo) * p(white|waldo) * p(skin|waldo) * p(hair|waldo)
+    p_notwaldo = prior_color_notwaldo.iloc[0,0] #* p(red|not_waldo) * p(white|not_waldo) * p(skin|not_waldo) * p(hair|not_waldo)
+
+    if is_waldo == 1:
+        print(total_count, ': Image contains Waldo')
+    else:
+        print(total_count, ': Image does not contain Waldo')
+
+    if p_waldo > p_notwaldo:
+        print(total_count, ': I guess Waldo')
+        guess = 1
+    else:
+        print(total_count, ': I guess not Waldo')
+        guess = 0
+
+    if guess == is_waldo:
+        score = 1
+    else:
+        score = 0
+
+    return score
 
 
-# bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
-# bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
-# bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
-# bayesian(prior_glcm_waldo, prior_glcm_notwaldo)
+def bayesian_colors(path_waldo, path_notwaldo, prior_color_waldo, prior_color_notwaldo):
+        total_count = 0
+        total_score = 0
+
+        for file in os.listdir(path_waldo):
+            score = calculate_probabilities(path_waldo, file, prior_color_waldo, prior_color_notwaldo, 1, total_count)
+            total_score += score
+            total_count += 1
+
+        #for file in os.listdir(path_notwaldo):
+        #    count, score = calculate_probabilities(path_notwaldo, file, prior_color_waldo, prior_color_notwaldo, 0)
+        #    total_count += count
+        #    total_score += score
+
+        print('Total score: ', total_score, 'out of ', total_count)
+        print(total_score/total_count * 100, '% Accuracy')
+
+# Prior probability of seeing waldo, i.e. the ratio of waldo images to non-waldo images in our training set.
+# Set arbitrarily to 20%
+
+# glcm_waldo = 0.9997621193910255
+# avg_glcm_waldo = 0.0038158859518741435
+#
+# glcm_notwaldo = 1.007062237607153
+# avg_glcm_notwaldo = 0.003843748998500584
+
+# Basic first draft of naive bayesian
+prior_waldo = 0.2
+prior_not_waldo = 1 - prior_waldo
+
+prior_glcm_waldo = pd.read_csv('probabilities_waldo.csv', sep=',', header=None)
+prior_glcm_notwaldo = pd.read_csv('probabilities_notwaldo.csv', sep=',', header=None)
+# prior_glcm_waldo = prior_glcm_waldo.replace(0.0, 1.0)
+
+#with waldo
+path_waldo = get_path("path_waldo.txt")
+
+#without waldo
+path_notwaldo = get_path("path_notwaldo.txt")
+
+#mixed
+path_mixed = get_path("path_mixed.txt")
+
+#for i in range(0, 10):
+#    prior_glcm_waldo, prior_glcm_notwaldo = bayesian_glcm(path_mixed, prior_glcm_waldo, prior_glcm_notwaldo)
+
+prior_colors_waldo = pd.read_csv('waldo_color.csv', sep=',', header=None)
+prior_colors_notwaldo = pd.read_csv('notwaldo_color.csv', sep=',', header=None)
+
+bayesian_colors(path_waldo, path_notwaldo, prior_colors_waldo, prior_colors_notwaldo)

@@ -129,7 +129,7 @@ def extract_color_proportion_single_image(path, file):
         #cv2.waitKey(0)
         #cv2.destroyAllWindows()
 
-        print("red: ", red_count, " white: ", white_count, " skin: ", skin_count, " hair: ", hair_count)
+        #print("red: ", red_count, " white: ", white_count, " skin: ", skin_count, " hair: ", hair_count)
 
         return red_count, white_count, skin_count, hair_count
 
@@ -162,12 +162,12 @@ def extract_color_proportion(path, filename):
 
 #with waldo
 path = get_path("path_waldo.txt")
-extract_color_proportion(path, "waldo_color.csv")
+#extract_color_proportion(path, "waldo_color.csv")
 # gray_scale_cooccurance(path, "probabilities_waldo.csv")
 #
 #without waldo
 path = get_path("path_notwaldo.txt")
-extract_color_proportion(path, "notwaldo_color.csv")
+#extract_color_proportion(path, "notwaldo_color.csv")
 #gray_scale_cooccurance(path, "probabilities_notwaldo.csv")
 
 
