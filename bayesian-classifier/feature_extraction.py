@@ -63,16 +63,16 @@ def get_hsv_limits(bgr_value, range_value):
         hsvColor = cv2.cvtColor(color, cv2.COLOR_BGR2HSV)
 
         # display the color values
-        print("BGR:", color)
-        print("HSV:", hsvColor)
+        #print("BGR:", color)
+        #print("HSV:", hsvColor)
 
         # Compute the lower and upper limits
         lowerLimit = (int)(hsvColor[0][0][0]) - range_value, (int)(hsvColor[0][0][1]) - range_value, (int)(hsvColor[0][0][2]) - range_value
         upperLimit = (int)(hsvColor[0][0][0]) + range_value, (int)(hsvColor[0][0][1]) + range_value, (int)(hsvColor[0][0][2]) + range_value
 
         # display the lower and upper limits
-        print("Lower Limit:",lowerLimit)
-        print("Upper Limit", upperLimit)
+        #print("Lower Limit:",lowerLimit)
+        #print("Upper Limit", upperLimit)
 
         return lowerLimit, upperLimit
 
@@ -81,13 +81,20 @@ def create_mask(hsv, lower, upper, file):
                     
         # count non-zero pixels in mask
         count=np.count_nonzero(mask)
-        print('filename:', file,'count:', count)
-        return mask
+        #print('filename:', file,'count:', count)
+        return count
 
 
 def extract_color_proportion(path, filename):
+        red_count = 0
+        white_count = 0
+        skin_count = 0
+        hair_count = 0
+        n = 0
+
         with open(filename, 'w') as f:
             for file in listdir(path):
+                    n += 1
                     # load image
                     image_path = path + '/' + file
                     img = cv2.imread(image_path)
@@ -97,28 +104,28 @@ def extract_color_proportion(path, filename):
                     h,s,v = cv2.split(hsv)
 
                     #waldo red
-                    print("red")
+                    #print("red")
                     lower, upper = get_hsv_limits([81, 68, 214], 30)
                     #create mask
-                    mask = create_mask(hsv, lower, upper, file)
+                    red_count += create_mask(hsv, lower, upper, file)
 
                     #waldo white
-                    print("white")
+                    #print("white")
                     lower, upper = get_hsv_limits([250, 255, 237], 30)
                     #create mask
-                    mask = create_mask(hsv, lower, upper, file)
+                    white_count += create_mask(hsv, lower, upper, file)
 
                     #waldo skin
-                    print("skin")
+                    #print("skin")
                     lower, upper = get_hsv_limits([168, 187, 244], 10)
                     #create mask
-                    mask = create_mask(hsv, lower, upper, file)
+                    skin_count += create_mask(hsv, lower, upper, file)
 
                     #waldo hair
-                    print("hair")
+                    #print("hair")
                     lower, upper = get_hsv_limits([54, 37, 40], 30)
                     #create mask
-                    mask = create_mask(hsv, lower, upper, file)
+                    hair_count += create_mask(hsv, lower, upper, file)
 
                     ## save output
                     #cv2.imwrite('mask.png', mask)
@@ -130,21 +137,27 @@ def extract_color_proportion(path, filename):
                     #cv2.imshow('mask',mask)
                     #cv2.waitKey(0)
                     #cv2.destroyAllWindows()
-                    break
 
+            
+            average_red = red_count / n
+            average_white = white_count / n
+            average_skin = skin_count / n
+            average_hair = hair_count / n
+            print("red: ", average_red, " white: ", average_white, " skin: ", average_skin, " hair: ", average_hair) 
 
-            #np.savetxt(f, glcm[:, :, 0, 0], delimiter=',')
+            np.savetxt(f, np.array([average_red, average_white, average_skin, average_hair]), delimiter=',')
 
 
 
 #with waldo
 path = get_path("path_waldo.txt")
-extract_color_proportion(path, "color.csv")
+extract_color_proportion(path, "waldo_color.csv")
 # gray_scale_cooccurance(path, "probabilities_waldo.csv")
 #
-# #without waldo
-# path = get_path("path_notwaldo.txt")
-# gray_scale_cooccurance(path, "probabilities_notwaldo.csv")
+#without waldo
+path = get_path("path_notwaldo.txt")
+extract_color_proportion(path, "notwaldo_color.csv")
+#gray_scale_cooccurance(path, "probabilities_notwaldo.csv")
 
 
 #prewitt_kernel(path)
