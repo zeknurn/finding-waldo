@@ -85,6 +85,55 @@ def create_mask(hsv, lower, upper, file):
         return count
 
 
+def extract_color_proportion_single_image(path, file):
+        # load image
+        image_path = path + '/' + file
+        img = cv2.imread(image_path)
+
+        # convert to HSV
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        h,s,v = cv2.split(hsv)
+
+        #waldo red
+        #print("red")
+        lower, upper = get_hsv_limits([81, 68, 214], 30)
+        #create mask
+        red_count = create_mask(hsv, lower, upper, file)
+
+        #waldo white
+        #print("white")
+        lower, upper = get_hsv_limits([250, 255, 237], 30)
+        #create mask
+        white_count = create_mask(hsv, lower, upper, file)
+
+        #waldo skin
+        #print("skin")
+        lower, upper = get_hsv_limits([168, 187, 244], 10)
+        #create mask
+        skin_count = create_mask(hsv, lower, upper, file)
+
+        #waldo hair
+        #print("hair")
+        lower, upper = get_hsv_limits([54, 37, 40], 30)
+        #create mask
+        hair_count = create_mask(hsv, lower, upper, file)
+
+        ## save output
+        #cv2.imwrite('mask.png', mask)
+
+        ### Display various images to see the steps
+        ##cv2.namedWindow('mask', cv2.WINDOW_NORMAL)
+        ##cv2.resizeWindow('mask', 800, 600)
+
+        #cv2.imshow('mask',mask)
+        #cv2.waitKey(0)
+        #cv2.destroyAllWindows()
+
+        print("red: ", red_count, " white: ", white_count, " skin: ", skin_count, " hair: ", hair_count)
+
+        return red_count, white_count, skin_count, hair_count
+
+
 def extract_color_proportion(path, filename):
         red_count = 0
         white_count = 0
@@ -95,55 +144,17 @@ def extract_color_proportion(path, filename):
         with open(filename, 'w') as f:
             for file in listdir(path):
                     n += 1
-                    # load image
-                    image_path = path + '/' + file
-                    img = cv2.imread(image_path)
+                    red, white, skin, hair = extract_color_proportion_single_image(path, file)
+                    red_count += red
+                    white_count += white
+                    skin_count += skin
+                    hair_count += hair
 
-                    # convert to HSV
-                    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-                    h,s,v = cv2.split(hsv)
-
-                    #waldo red
-                    #print("red")
-                    lower, upper = get_hsv_limits([81, 68, 214], 30)
-                    #create mask
-                    red_count += create_mask(hsv, lower, upper, file)
-
-                    #waldo white
-                    #print("white")
-                    lower, upper = get_hsv_limits([250, 255, 237], 30)
-                    #create mask
-                    white_count += create_mask(hsv, lower, upper, file)
-
-                    #waldo skin
-                    #print("skin")
-                    lower, upper = get_hsv_limits([168, 187, 244], 10)
-                    #create mask
-                    skin_count += create_mask(hsv, lower, upper, file)
-
-                    #waldo hair
-                    #print("hair")
-                    lower, upper = get_hsv_limits([54, 37, 40], 30)
-                    #create mask
-                    hair_count += create_mask(hsv, lower, upper, file)
-
-                    ## save output
-                    #cv2.imwrite('mask.png', mask)
-
-                    ### Display various images to see the steps
-                    ##cv2.namedWindow('mask', cv2.WINDOW_NORMAL)
-                    ##cv2.resizeWindow('mask', 800, 600)
-
-                    #cv2.imshow('mask',mask)
-                    #cv2.waitKey(0)
-                    #cv2.destroyAllWindows()
-
-            
             average_red = red_count / n
             average_white = white_count / n
             average_skin = skin_count / n
             average_hair = hair_count / n
-            print("red: ", average_red, " white: ", average_white, " skin: ", average_skin, " hair: ", average_hair) 
+            print("avg red: ", average_red, " avg white: ", average_white, " avg skin: ", average_skin, " avg hair: ", average_hair) 
 
             np.savetxt(f, np.array([average_red, average_white, average_skin, average_hair]), delimiter=',')
 
