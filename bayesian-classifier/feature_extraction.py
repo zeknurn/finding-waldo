@@ -67,14 +67,22 @@ def get_hsv_limits(bgr_value, range_value):
         print("HSV:", hsvColor)
 
         # Compute the lower and upper limits
-        lowerLimit = (int)(hsvColor[0][0][0]) - range_value, 100, 100
-        upperLimit = (int)(hsvColor[0][0][0]) + range_value, 255, 255
+        lowerLimit = (int)(hsvColor[0][0][0]) - range_value, (int)(hsvColor[0][0][1]) - range_value, (int)(hsvColor[0][0][2]) - range_value
+        upperLimit = (int)(hsvColor[0][0][0]) + range_value, (int)(hsvColor[0][0][1]) + range_value, (int)(hsvColor[0][0][2]) + range_value
 
         # display the lower and upper limits
         print("Lower Limit:",lowerLimit)
         print("Upper Limit", upperLimit)
 
         return lowerLimit, upperLimit
+
+def create_mask(hsv, lower, upper, file):
+        mask = cv2.inRange(hsv, lower, upper)
+                    
+        # count non-zero pixels in mask
+        count=np.count_nonzero(mask)
+        print('filename:', file,'count:', count)
+        return mask
 
 
 def extract_color_proportion(path, filename):
@@ -90,35 +98,38 @@ def extract_color_proportion(path, filename):
 
                     #waldo red
                     print("red")
-                    lower, upper = get_hsv_limits([81, 68, 214], 10)
+                    lower, upper = get_hsv_limits([81, 68, 214], 30)
+                    #create mask
+                    mask = create_mask(hsv, lower, upper, file)
 
                     #waldo white
                     print("white")
-                    #lower, upper = get_hsv_limits([250, 255, 237], 40)
+                    lower, upper = get_hsv_limits([250, 255, 237], 30)
+                    #create mask
+                    mask = create_mask(hsv, lower, upper, file)
 
                     #waldo skin
                     print("skin")
-                    #lower, upper = get_hsv_limits([168, 187, 244], 10)
+                    lower, upper = get_hsv_limits([168, 187, 244], 10)
+                    #create mask
+                    mask = create_mask(hsv, lower, upper, file)
 
                     #waldo hair
                     print("hair")
-                    #lower, upper = get_hsv_limits([54, 37, 40], 30)
-                    
-                    # create mask for blue color in hsv
-                    # blue is 240 in range 0 to 360, so for opencv it would be 120
-                    mask = cv2.inRange(hsv, lower, upper)
+                    lower, upper = get_hsv_limits([54, 37, 40], 30)
+                    #create mask
+                    mask = create_mask(hsv, lower, upper, file)
 
-                    # count non-zero pixels in mask
-                    count=np.count_nonzero(mask)
-                    print('filename:', file,'count:', count)
+                    ## save output
+                    #cv2.imwrite('mask.png', mask)
 
-                    # save output
-                    cv2.imwrite('mask.png', mask)
+                    ### Display various images to see the steps
+                    ##cv2.namedWindow('mask', cv2.WINDOW_NORMAL)
+                    ##cv2.resizeWindow('mask', 800, 600)
 
-                    # Display various images to see the steps
-                    cv2.imshow('mask',mask)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
+                    #cv2.imshow('mask',mask)
+                    #cv2.waitKey(0)
+                    #cv2.destroyAllWindows()
                     break
 
 
