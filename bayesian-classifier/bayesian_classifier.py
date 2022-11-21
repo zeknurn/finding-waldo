@@ -84,7 +84,7 @@ def inv_lerp(a: float, b: float, v: float) -> float:
         0.5 == inv_lerp(0, 100, 50)
         0.8 == inv_lerp(1, 5, 4.2)
     """
-    return (v - a) / (b - a)
+    return (1 - ((v - a) / (b - a))) + 0.001
 
 def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo, is_waldo, total_count
                             , min_max_color_waldo, min_max_color_notwaldo):
@@ -98,14 +98,30 @@ def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo,
     prior_avg_hair_waldo = int(prior_color_waldo.iat[3,0])
 
     #get inverse lerp of each color containing waldo
-    red_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[0,0], min_max_color_waldo.iat[0,1], current_red)
-    white_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[1,0], min_max_color_waldo.iat[1,1], current_white)
-    skin_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[2,0], min_max_color_waldo.iat[2,1], current_skin)
-    hair_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[3,0], min_max_color_waldo.iat[3,1], current_hair)
-    #print("waldo. min: ", min_max_color_waldo.iat[0,0], "max ",  min_max_color_waldo.iat[0,1], " current_red: ", current_red, " inv lerp: ", red_inv_lerp_waldo)
-    #print("waldo. min: ", min_max_color_waldo.iat[1,0], "max ",  min_max_color_waldo.iat[1,1], " current_white: ", current_white, " inv lerp: ", white_inv_lerp_waldo)
-    #print("waldo. min: ", min_max_color_waldo.iat[2,0], "max ",  min_max_color_waldo.iat[2,1], " current_skin: ", current_skin, " inv lerp: ", skin_inv_lerp_waldo)
-    #print("waldo. min: ", min_max_color_waldo.iat[3,0], "max ",  min_max_color_waldo.iat[3,1], " current_skin: ", current_hair, " inv lerp: ", hair_inv_lerp_waldo)
+    if current_red > prior_avg_red_waldo:
+        red_inv_lerp_waldo = inv_lerp(prior_avg_red_waldo, min_max_color_waldo.iat[0,1], current_red)
+    else:
+        red_inv_lerp_waldo = inv_lerp(prior_avg_red_waldo, min_max_color_waldo.iat[0,0], current_red)
+
+    if current_white > prior_avg_white_waldo:
+        white_inv_lerp_waldo = inv_lerp(prior_avg_white_waldo, min_max_color_waldo.iat[1,1], current_white)
+    else:
+        white_inv_lerp_waldo = inv_lerp(prior_avg_white_waldo, min_max_color_waldo.iat[1,0], current_white)
+
+    if current_skin > prior_avg_skin_waldo:
+        skin_inv_lerp_waldo = inv_lerp(prior_avg_skin_waldo, min_max_color_waldo.iat[2,1], current_skin)
+    else:
+        skin_inv_lerp_waldo = inv_lerp(prior_avg_skin_waldo, min_max_color_waldo.iat[2,0], current_skin)
+
+    if current_hair > prior_avg_hair_waldo:
+        hair_inv_lerp_waldo = inv_lerp(prior_avg_hair_waldo, min_max_color_waldo.iat[3,1], current_hair)
+    else:
+        hair_inv_lerp_waldo = inv_lerp(prior_avg_hair_waldo, min_max_color_waldo.iat[3,0], current_hair)
+
+    #print("waldo. min: ", min_max_color_waldo.iat[0,0], "max ",  min_max_color_waldo.iat[0,1], " avg: ", prior_avg_red_waldo, " current_red: ", current_red, " inv lerp: ", red_inv_lerp_waldo)
+    #print("waldo. min: ", min_max_color_waldo.iat[1,0], "max ",  min_max_color_waldo.iat[1,1], " avg: ", prior_avg_white_waldo,  " current_white: ", current_white, " inv lerp: ", white_inv_lerp_waldo)
+    #print("waldo. min: ", min_max_color_waldo.iat[2,0], "max ",  min_max_color_waldo.iat[2,1], " avg: ", prior_avg_skin_waldo,  " current_skin: ", current_skin, " inv lerp: ", skin_inv_lerp_waldo)
+    #print("waldo. min: ", min_max_color_waldo.iat[3,0], "max ",  min_max_color_waldo.iat[3,1], " avg: ", prior_avg_hair_waldo,  " current_skin: ", current_hair, " inv lerp: ", hair_inv_lerp_waldo)
     
     p_waldo = red_inv_lerp_waldo * white_inv_lerp_waldo * skin_inv_lerp_waldo * hair_inv_lerp_waldo
 
@@ -115,14 +131,30 @@ def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo,
     prior_avg_hair_notwaldo = prior_color_notwaldo.iat[3,0]
 
     #get inverse lerp of each color NOT containing waldo
-    red_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[0,0], min_max_color_notwaldo.iat[0,1], current_red)
-    white_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[1,0], min_max_color_notwaldo.iat[1,1], current_white)
-    skin_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[2,0], min_max_color_notwaldo.iat[2,1], current_skin)
-    hair_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[3,0], min_max_color_notwaldo.iat[3,1], current_hair)
-    #print("notwaldo. min: ", min_max_color_notwaldo.iat[0,0], "max ",  min_max_color_notwaldo.iat[0,1], " current_red: ", current_red, " inv lerp: ", red_inv_lerp_notwaldo)
-    #print("notwaldo. min: ", min_max_color_notwaldo.iat[1,0], "max ",  min_max_color_notwaldo.iat[1,1], " current_white: ", current_white, " inv lerp: ", white_inv_lerp_notwaldo)
-    #print("notwaldo. min: ", min_max_color_notwaldo.iat[2,0], "max ",  min_max_color_notwaldo.iat[2,1], " current_skin: ", current_skin, " inv lerp: ", skin_inv_lerp_notwaldo)
-    #print("notwaldo. min: ", min_max_color_notwaldo.iat[3,0], "max ",  min_max_color_notwaldo.iat[3,1], " current_hair: ", current_hair, " inv lerp: ", hair_inv_lerp_notwaldo)
+    if current_red > prior_avg_red_notwaldo:
+        red_inv_lerp_notwaldo = inv_lerp(prior_avg_red_notwaldo, min_max_color_notwaldo.iat[0,1], current_red)
+    else:
+        red_inv_lerp_notwaldo = inv_lerp(prior_avg_red_notwaldo, min_max_color_notwaldo.iat[0,0], current_red)
+
+    if current_white > prior_avg_white_notwaldo:
+        white_inv_lerp_notwaldo = inv_lerp(prior_avg_white_notwaldo, min_max_color_notwaldo.iat[1,1], current_white)
+    else:
+        white_inv_lerp_notwaldo = inv_lerp(prior_avg_white_notwaldo, min_max_color_notwaldo.iat[1,0], current_white)
+
+    if current_skin > prior_avg_skin_notwaldo:
+        skin_inv_lerp_notwaldo = inv_lerp(prior_avg_skin_notwaldo, min_max_color_notwaldo.iat[2,1], current_skin)
+    else:
+        skin_inv_lerp_notwaldo = inv_lerp(prior_avg_skin_notwaldo, min_max_color_notwaldo.iat[2,0], current_skin)
+
+    if current_hair > prior_avg_hair_notwaldo:
+        hair_inv_lerp_notwaldo = inv_lerp(prior_avg_hair_notwaldo, min_max_color_notwaldo.iat[3,1], current_hair)
+    else:
+        hair_inv_lerp_notwaldo = inv_lerp(prior_avg_hair_notwaldo, min_max_color_notwaldo.iat[3,0], current_hair)
+
+    #print("notwaldo. min: ", min_max_color_notwaldo.iat[0,0], "max ",  min_max_color_notwaldo.iat[0,1], " avg: ", prior_avg_red_notwaldo, " current_red: ", current_red, " inv lerp: ", red_inv_lerp_notwaldo)
+    #print("notwaldo. min: ", min_max_color_notwaldo.iat[1,0], "max ",  min_max_color_notwaldo.iat[1,1], " avg: ", prior_avg_white_notwaldo, " current_white: ", current_white, " inv lerp: ", white_inv_lerp_notwaldo)
+    #print("notwaldo. min: ", min_max_color_notwaldo.iat[2,0], "max ",  min_max_color_notwaldo.iat[2,1], " avg: ", prior_avg_skin_notwaldo,  " current_skin: ", current_skin, " inv lerp: ", skin_inv_lerp_notwaldo)
+    #print("notwaldo. min: ", min_max_color_notwaldo.iat[3,0], "max ",  min_max_color_notwaldo.iat[3,1], " avg: ", prior_avg_hair_notwaldo,  " current_hair: ", current_hair, " inv lerp: ", hair_inv_lerp_notwaldo)
 
     p_notwaldo = red_inv_lerp_notwaldo * white_inv_lerp_notwaldo * skin_inv_lerp_notwaldo * hair_inv_lerp_notwaldo
 
