@@ -92,10 +92,10 @@ def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo,
     current_red, current_white, current_skin, current_hair = feature_extraction.extract_color_proportion_single_image(path, file)
 
     #prior is stored in array order of red, white, skin, hair
-    prior_red_waldo = int(prior_color_waldo.iat[0,0])
-    prior_white_waldo = int(prior_color_waldo.iat[1,0])
-    prior_skin_waldo = int(prior_color_waldo.iat[2,0])
-    prior_hair_waldo = int(prior_color_waldo.iat[3,0])
+    prior_avg_red_waldo = int(prior_color_waldo.iat[0,0])
+    prior_avg_white_waldo = int(prior_color_waldo.iat[1,0])
+    prior_avg_skin_waldo = int(prior_color_waldo.iat[2,0])
+    prior_avg_hair_waldo = int(prior_color_waldo.iat[3,0])
 
     #get inverse lerp of each color containing waldo
     red_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[0,0], min_max_color_waldo.iat[0,1], current_red)
@@ -109,10 +109,10 @@ def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo,
     
     p_waldo = red_inv_lerp_waldo * white_inv_lerp_waldo * skin_inv_lerp_waldo * hair_inv_lerp_waldo
 
-    prior_red_notwaldo = prior_color_notwaldo.iat[0,0]
-    prior_white_notwaldo = prior_color_notwaldo.iat[1,0]
-    prior_skin_notwaldo = prior_color_notwaldo.iat[2,0]
-    prior_hair_notwaldo = prior_color_notwaldo.iat[3,0]
+    prior_avg_red_notwaldo = prior_color_notwaldo.iat[0,0]
+    prior_avg_white_notwaldo = prior_color_notwaldo.iat[1,0]
+    prior_avg_skin_notwaldo = prior_color_notwaldo.iat[2,0]
+    prior_avg_hair_notwaldo = prior_color_notwaldo.iat[3,0]
 
     #get inverse lerp of each color NOT containing waldo
     red_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[0,0], min_max_color_notwaldo.iat[0,1], current_red)
