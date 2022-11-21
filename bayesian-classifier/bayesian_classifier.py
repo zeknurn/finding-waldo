@@ -86,7 +86,8 @@ def inv_lerp(a: float, b: float, v: float) -> float:
     """
     return (v - a) / (b - a)
 
-def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo, is_waldo, total_count):
+def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo, is_waldo, total_count
+                            , min_max_color_waldo, min_max_color_notwaldo):
     #get the current pixel counts for one image
     current_red, current_white, current_skin, current_hair = feature_extraction.extract_color_proportion_single_image(path, file)
 
@@ -96,19 +97,34 @@ def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo,
     prior_skin_waldo = int(prior_color_waldo.iat[2,0])
     prior_hair_waldo = int(prior_color_waldo.iat[3,0])
 
-    #get the min and max values of red
-    red_min = min(current_red, prior_red_waldo)
-    red_max = max(current_red, prior_red_waldo)
-    red_inv_lerp = inv_lerp(red_min, red_max, current_red)
-    print(red_min, " ", red_max, " ", red_inv_lerp)
-    p_waldo = current_red / prior_red_waldo #* p(red|waldo) * p(white|waldo) * p(skin|waldo) * p(hair|waldo)
+    #get inverse lerp of each color containing waldo
+    red_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[0,0], min_max_color_waldo.iat[0,1], current_red)
+    white_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[1,0], min_max_color_waldo.iat[1,1], current_white)
+    skin_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[2,0], min_max_color_waldo.iat[2,1], current_skin)
+    hair_inv_lerp_waldo = inv_lerp(min_max_color_waldo.iat[3,0], min_max_color_waldo.iat[3,1], current_hair)
+    #print("waldo. min: ", min_max_color_waldo.iat[0,0], "max ",  min_max_color_waldo.iat[0,1], " current_red: ", current_red, " inv lerp: ", red_inv_lerp_waldo)
+    #print("waldo. min: ", min_max_color_waldo.iat[1,0], "max ",  min_max_color_waldo.iat[1,1], " current_white: ", current_white, " inv lerp: ", white_inv_lerp_waldo)
+    #print("waldo. min: ", min_max_color_waldo.iat[2,0], "max ",  min_max_color_waldo.iat[2,1], " current_skin: ", current_skin, " inv lerp: ", skin_inv_lerp_waldo)
+    #print("waldo. min: ", min_max_color_waldo.iat[3,0], "max ",  min_max_color_waldo.iat[3,1], " current_skin: ", current_hair, " inv lerp: ", hair_inv_lerp_waldo)
+    
+    p_waldo = red_inv_lerp_waldo * white_inv_lerp_waldo * skin_inv_lerp_waldo * hair_inv_lerp_waldo
 
     prior_red_notwaldo = prior_color_notwaldo.iat[0,0]
     prior_white_notwaldo = prior_color_notwaldo.iat[1,0]
     prior_skin_notwaldo = prior_color_notwaldo.iat[2,0]
     prior_hair_notwaldo = prior_color_notwaldo.iat[3,0]
 
-    p_notwaldo = prior_color_notwaldo.iloc[0,0] #* p(red|not_waldo) * p(white|not_waldo) * p(skin|not_waldo) * p(hair|not_waldo)
+    #get inverse lerp of each color NOT containing waldo
+    red_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[0,0], min_max_color_notwaldo.iat[0,1], current_red)
+    white_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[1,0], min_max_color_notwaldo.iat[1,1], current_white)
+    skin_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[2,0], min_max_color_notwaldo.iat[2,1], current_skin)
+    hair_inv_lerp_notwaldo = inv_lerp(min_max_color_notwaldo.iat[3,0], min_max_color_notwaldo.iat[3,1], current_hair)
+    #print("notwaldo. min: ", min_max_color_notwaldo.iat[0,0], "max ",  min_max_color_notwaldo.iat[0,1], " current_red: ", current_red, " inv lerp: ", red_inv_lerp_notwaldo)
+    #print("notwaldo. min: ", min_max_color_notwaldo.iat[1,0], "max ",  min_max_color_notwaldo.iat[1,1], " current_white: ", current_white, " inv lerp: ", white_inv_lerp_notwaldo)
+    #print("notwaldo. min: ", min_max_color_notwaldo.iat[2,0], "max ",  min_max_color_notwaldo.iat[2,1], " current_skin: ", current_skin, " inv lerp: ", skin_inv_lerp_notwaldo)
+    #print("notwaldo. min: ", min_max_color_notwaldo.iat[3,0], "max ",  min_max_color_notwaldo.iat[3,1], " current_hair: ", current_hair, " inv lerp: ", hair_inv_lerp_notwaldo)
+
+    p_notwaldo = red_inv_lerp_notwaldo * white_inv_lerp_notwaldo * skin_inv_lerp_notwaldo * hair_inv_lerp_notwaldo
 
     if is_waldo == 1:
         print(total_count, ': Image contains Waldo')
@@ -130,19 +146,22 @@ def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo,
     return score
 
 
-def bayesian_colors(path_waldo, path_notwaldo, prior_color_waldo, prior_color_notwaldo):
+def bayesian_colors(path_waldo, path_notwaldo, prior_color_waldo, prior_color_notwaldo,
+                   min_max_color_waldo, min_max_color_notwaldo):
         total_count = 0
         total_score = 0
 
         for file in os.listdir(path_waldo):
-            score = calculate_probabilities(path_waldo, file, prior_color_waldo, prior_color_notwaldo, 1, total_count)
+            score = calculate_probabilities(path_waldo, file, prior_color_waldo, prior_color_notwaldo, 1,
+                                           total_count, min_max_color_waldo, min_max_color_notwaldo)
             total_score += score
             total_count += 1
 
-        #for file in os.listdir(path_notwaldo):
-        #    count, score = calculate_probabilities(path_notwaldo, file, prior_color_waldo, prior_color_notwaldo, 0)
-        #    total_count += count
-        #    total_score += score
+        for file in os.listdir(path_notwaldo):
+            score = calculate_probabilities(path_notwaldo, file, prior_color_waldo, prior_color_notwaldo, 0,
+                                           total_count, min_max_color_waldo, min_max_color_notwaldo)
+            total_score += score
+            total_count += 1
 
         print('Total score: ', total_score, 'out of ', total_count)
         print(total_score/total_count * 100, '% Accuracy')
@@ -179,4 +198,7 @@ path_mixed = get_path("path_mixed.txt")
 prior_colors_waldo = pd.read_csv('waldo_color.csv', sep=',', header=None)
 prior_colors_notwaldo = pd.read_csv('notwaldo_color.csv', sep=',', header=None)
 
-bayesian_colors(path_waldo, path_notwaldo, prior_colors_waldo, prior_colors_notwaldo)
+min_max_colors_waldo = pd.read_csv('color_min_max_waldo.csv', sep=',', header=None)
+min_max_colors_notwaldo = pd.read_csv('color_min_max_notwaldo.csv', sep=',', header=None)
+
+bayesian_colors(path_waldo, path_notwaldo, prior_colors_waldo, prior_colors_notwaldo, min_max_colors_waldo, min_max_colors_notwaldo)

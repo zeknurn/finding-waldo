@@ -194,7 +194,7 @@ def get_min_max_colors(path1, output_filename):
                 elif (hair > hair_max):
                     hair_max = hair
             #print(red_min, " ", red_max)
-            np.savetxt(f, np.array([[red_min, red_max], [white_min, white_max], [skin_min, skin_max], [hair_min, hair_max]]), header = "min,max", delimiter=',')
+            np.savetxt(f, np.array([[red_min, red_max], [white_min, white_max], [skin_min, skin_max], [hair_min, hair_max]]), delimiter=',')
 
 #with waldo
 path_waldo = get_path("path_waldo.txt")
