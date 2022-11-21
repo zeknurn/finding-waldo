@@ -77,10 +77,37 @@ def bayesian_glcm(path, prior_glcm_waldo, prior_glcm_notwaldo):
     return prior_glcm_waldo, prior_glcm_notwaldo
 
 
+def inv_lerp(a: float, b: float, v: float) -> float:
+    """Inverse Linar Interpolation, get the fraction between a and b on which v resides.
+    Examples
+    --------
+        0.5 == inv_lerp(0, 100, 50)
+        0.8 == inv_lerp(1, 5, 4.2)
+    """
+    return (v - a) / (b - a)
+
 def calculate_probabilities(path, file, prior_color_waldo, prior_color_notwaldo, is_waldo, total_count):
-    red_count, white_count, skin_count, hair_count = feature_extraction.extract_color_proportion_single_image(path, file)
-    #prior is red, white, skin, hair
-    p_waldo = prior_color_waldo.iloc[0,0] #* p(red|waldo) * p(white|waldo) * p(skin|waldo) * p(hair|waldo)
+    #get the current pixel counts for one image
+    current_red, current_white, current_skin, current_hair = feature_extraction.extract_color_proportion_single_image(path, file)
+
+    #prior is stored in array order of red, white, skin, hair
+    prior_red_waldo = int(prior_color_waldo.iat[0,0])
+    prior_white_waldo = int(prior_color_waldo.iat[1,0])
+    prior_skin_waldo = int(prior_color_waldo.iat[2,0])
+    prior_hair_waldo = int(prior_color_waldo.iat[3,0])
+
+    #get the min and max values of red
+    red_min = min(current_red, prior_red_waldo)
+    red_max = max(current_red, prior_red_waldo)
+    red_inv_lerp = inv_lerp(red_min, red_max, current_red)
+    print(red_min, " ", red_max, " ", red_inv_lerp)
+    p_waldo = current_red / prior_red_waldo #* p(red|waldo) * p(white|waldo) * p(skin|waldo) * p(hair|waldo)
+
+    prior_red_notwaldo = prior_color_notwaldo.iat[0,0]
+    prior_white_notwaldo = prior_color_notwaldo.iat[1,0]
+    prior_skin_notwaldo = prior_color_notwaldo.iat[2,0]
+    prior_hair_notwaldo = prior_color_notwaldo.iat[3,0]
+
     p_notwaldo = prior_color_notwaldo.iloc[0,0] #* p(red|not_waldo) * p(white|not_waldo) * p(skin|not_waldo) * p(hair|not_waldo)
 
     if is_waldo == 1:

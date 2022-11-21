@@ -1,4 +1,5 @@
 #importing the required libraries
+from asyncio.windows_events import NULL
 import numpy as np
 from skimage.io import imread, imshow
 from skimage.filters import prewitt_h,prewitt_v
@@ -7,6 +8,7 @@ from skimage import img_as_ubyte
 import matplotlib.pyplot as plt
 from os import listdir
 import cv2
+import sys
 #%matplotlib inline
 
 def get_path(filename):
@@ -134,14 +136,14 @@ def extract_color_proportion_single_image(path, file):
         return red_count, white_count, skin_count, hair_count
 
 
-def extract_color_proportion(path, filename):
+def extract_color_proportion(path, output_filename):
         red_count = 0
         white_count = 0
         skin_count = 0
         hair_count = 0
         n = 0
 
-        with open(filename, 'w') as f:
+        with open(output_filename, 'w') as f:
             for file in listdir(path):
                     n += 1
                     red, white, skin, hair = extract_color_proportion_single_image(path, file)
@@ -158,17 +160,53 @@ def extract_color_proportion(path, filename):
 
             np.savetxt(f, np.array([average_red, average_white, average_skin, average_hair]), delimiter=',')
 
+def get_min_max_colors(path1, output_filename):
+        red_min = sys.maxsize
+        red_max = 0
+        white_min = sys.maxsize
+        white_max = 0
+        skin_min = sys.maxsize
+        skin_max = 0
+        hair_min = sys.maxsize
+        hair_max = 0
+        
+        with open(output_filename, 'w') as f:
+            for file in listdir(path1):
+                red, white, skin, hair = extract_color_proportion_single_image(path1, file)
 
+                if(red < red_min):
+                    red_min = red
+                elif (red > red_max):
+                    red_max = red
+
+                if(white < white_min):
+                    white_min = white
+                elif (white > white_max):
+                    white_max = white
+
+                if(skin < skin_min):
+                    skin_min = skin
+                elif (skin > skin_max):
+                    skin_max = skin
+
+                if(hair < hair_min):
+                    hair_min = hair
+                elif (hair > hair_max):
+                    hair_max = hair
+            #print(red_min, " ", red_max)
+            np.savetxt(f, np.array([[red_min, red_max], [white_min, white_max], [skin_min, skin_max], [hair_min, hair_max]]), header = "min,max", delimiter=',')
 
 #with waldo
-path = get_path("path_waldo.txt")
-#extract_color_proportion(path, "waldo_color.csv")
-# gray_scale_cooccurance(path, "probabilities_waldo.csv")
-#
-#without waldo
-path = get_path("path_notwaldo.txt")
-#extract_color_proportion(path, "notwaldo_color.csv")
-#gray_scale_cooccurance(path, "probabilities_notwaldo.csv")
+path_waldo = get_path("path_waldo.txt")
+#extract_color_proportion(path_waldo, "waldo_color.csv")
+#gray_scale_cooccurance(path_waldo, "probabilities_waldo.csv")
 
+#without waldo
+path_notwaldo = get_path("path_notwaldo.txt")
+#extract_color_proportion(path_notwaldo, "notwaldo_color.csv")
+#gray_scale_cooccurance(path_notwaldo, "probabilities_notwaldo.csv")
+
+#get_min_max_colors(path_waldo, "color_min_max_waldo.csv")
+#get_min_max_colors(path_notwaldo, "color_min_max_notwaldo.csv")
 
 #prewitt_kernel(path)
