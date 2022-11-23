@@ -44,20 +44,18 @@ def load_data(training_size_percent, testing_size_percent):
 
     with open('features_waldo.csv', 'r') as f:
         x = np.loadtxt(f, delimiter=',')
-        # add the expected output values as columns to the end of the input values. first column is 1 for waldo, second column is 1 for no waldo
 
         y = np.ones(shape=(x.shape[0], 1))
         y = np.append(y, np.zeros([len(x), 1]), axis=1)
 
-    
+    with open('features_notwaldo.csv', 'r') as t:
+        x_2 = np.loadtxt(t, delimiter=',')
 
-    # with open('features_notwaldo.csv', 'r') as f:
-    #    notwaldo = np.loadtxt(f, delimiter=',')
-    #    # add the expected output values as columns to the end of the input values. first column is 1 for waldo, second column is 1 for no waldo
-    #    notwaldo = np.append(notwaldo, np.zeros([len(notwaldo), 1]), axis=1)
-    #    notwaldo = np.append(notwaldo, np.ones([len(notwaldo), 1]), axis=1)
+        y_2 = np.zeros(shape=(x_2.shape[0], 1))
+        y_2 = np.append(y_2, np.ones([len(x_2), 1]), axis=1)
 
-    # data = np.append(data, notwaldo, axis=0)
+    x = np.append(x, x_2, axis=0)
+    y = np.append(y, y_2, axis=0)
 
     # set the random seed to get the same result every run
     np.random.seed(0)
@@ -100,10 +98,10 @@ class Network:
         self.activation_layers.append(self.a1)
         self.activation_layers.append(self.a2)
 
-        self.w1 = np.random.uniform(-1, 1, size=(input_layer_size, hidden_layer_size))
-        self.w2 = np.random.uniform(-1, 1, size=(hidden_layer_size, output_layer_size))
-        self.b1 = np.random.uniform(-1, 1, size=(batch_size, hidden_layer_size))
-        self.b2 = np.random.uniform(-1, 1, size=(batch_size, output_layer_size))
+        self.w1 = np.random.uniform(-0.5, 0.5, size=(input_layer_size, hidden_layer_size))
+        self.w2 = np.random.uniform(-0.5, 0.5, size=(hidden_layer_size, output_layer_size))
+        self.b1 = np.random.uniform(-0.5, 0.5, size=(batch_size, hidden_layer_size))
+        self.b2 = np.random.uniform(-0.5, 0.5, size=(batch_size, output_layer_size))
         #self.b0 = np.random.uniform(-1,1, size=(1, input_layer_size))
 
         #self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
@@ -192,8 +190,9 @@ class Network:
     def d_sigmoid(self, z):
         return self.sigmoid * (1 - self.sigmoid(z))
 
-    def classify(self):
-        print("classification: ", self.a2)
+    def classify(self, x, y):
+        self.feed_forward(x)
+        print("classification: ", self.a2, " actual:", y)
 
     def cost(self, output, expected_output) -> float:
         error = output - expected_output
@@ -266,9 +265,6 @@ class Network:
 # remainder becomes validation data. sum of batches must not exceed 100%
 #x_train, x_test, x_valid, y_train, y_test, y_valid = load_data(training_size_percent=80, testing_size_percent=10)
 
-#x_sample = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0], [0.0, 1.0]])
-#y_sample = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0], [0.0, 1.0]])
-
 # XOR training data
 x_sample = np.array([
     [0, 0],
@@ -287,7 +283,7 @@ input_layer_size = x_sample.shape[1]
 hidden_layer_count = 1
 hidden_layer_size = 2
 output_layer_size = y_sample.shape[1]
-batch_size = 4 # needs to be evenly divideable by training size atm
+batch_size = 1 # needs to be evenly divideable by training size atm
 
 NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size, batch_size)
 
@@ -299,6 +295,8 @@ NN.learn(x_sample, y_sample, batch_size)
 # print("average loss for all training data: ", NN.loss_average(training_data))
 # print("average loss for all training data: ", NN.loss_average(sample_data))
 
-#NN.classify()
+
+for j in range(0, len(x_sample)):
+    NN.classify(x_sample[j], y_sample[j])
 
 # CSV_Handler.save_bias_weights(network)
