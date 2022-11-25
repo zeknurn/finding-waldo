@@ -64,7 +64,10 @@ def load_data(training_size_percent, testing_size_percent):
     rows = x.shape[0]
 
     # shuffle the rows of the matrix
-    np.random.shuffle(x)
+    randomize = np.arange(len(x))
+    np.random.shuffle(randomize)
+    x = x[randomize]
+    y = y[randomize]
 
     # calculate the last row index of the training and testing samples
     last_row_training = int(rows * training_size_percent / 100)
@@ -89,9 +92,9 @@ class Network:
 
     def __init__(self, input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size, batch_size):
 
-        self.a0 = np.empty(shape=(batch_size, input_layer_size))
-        self.a1 = np.empty(shape=(batch_size, hidden_layer_size))
-        self.a2 = np.empty(shape=(batch_size, output_layer_size))
+        self.a0 = np.zeros(shape=(batch_size, input_layer_size))
+        self.a1 = np.zeros(shape=(batch_size, hidden_layer_size))
+        self.a2 = np.zeros(shape=(batch_size, output_layer_size))
 
         self.activation_layers = []
         self.activation_layers.append(self.a0)
@@ -109,10 +112,10 @@ class Network:
         self.b2 = np.zeros(shape=self.a2.shape)
 
         # Gradients
-        self.w1_gradient = np.empty(shape=(input_layer_size, hidden_layer_size))
-        self.w2_gradient = np.empty(shape=(hidden_layer_size, output_layer_size))
-        self.b1_gradients = np.empty(shape=self.b1.shape)
-        self.b2_gradients = np.empty(shape=self.b2.shape)
+        self.w1_gradient = np.zeros(shape=(input_layer_size, hidden_layer_size))
+        self.w2_gradient = np.zeros(shape=(hidden_layer_size, output_layer_size))
+        self.b1_gradients = np.zeros(shape=self.b1.shape)
+        self.b2_gradients = np.zeros(shape=self.b2.shape)
         self.layer_count = 3
 
         # Z, sum of weighted activation + bias.
@@ -130,40 +133,55 @@ class Network:
 
         # feed forward the input
         relu_v = np.vectorize(lambda x: self.relu(x))
-        self.a1 = np.matmul(self.a0, self.w1) + self.b1
-        self.z1 = self.a1
-        self.a1 = relu_v(self.a1)
+        self.z1 = np.matmul(self.a0, self.w1) + self.b1
+        self.a1 = relu_v(self.z1)
 
-        self.a2 = np.matmul(self.a1, self.w2) + self.b2
-        self.z2 = self.a2
-        self.a2 = relu_v(self.a2)
+        self.z2 = np.matmul(self.a1, self.w2) + self.b2
+        self.a2 = relu_v(self.z2)
 
-        print("a0: ", self.a0)
-        print("z1: ", self.z1)
-        print("a1: ", self.a1)
-        print("z2: ", self.z2)
-        print("a2: ", self.a2)
+    def backprop_alternative(self, y):
+
+        vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
+
+        # Backpropagation phase
+        E1 = self.a2 - y
+        dW1 = E1 * self.a2 * vectorized_d_relu(self.a2)
+ 
+        E2 = np.dot(dW1, self.w2.T)
+        dW2 = E2 * self.a1 * vectorized_d_relu(self.a1)
+ 
+        # Updating the weights
+        W2_update = np.dot(self.a1.T, dW1)
+        W1_update = np.dot(self.a0.T, dW2)
+ 
+        learning_rate = 0.01
+
+        self.w2 = self.w2 - learning_rate * W2_update
+        self.w1 = self.w1 - learning_rate * W1_update
 
     def backpropagation(self, y):
 
         vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
 
-        # Partial derivatives
+        # Partial derivatives - output layer
         dc_a2 = (self.a2 - y) * 2
         da2_z2 = vectorized_d_relu(self.z2)
         dz2_w2 = self.a1
+        # Partial derivatives - hidden layer
         dz2_a1 = self.w2
         da1_z1 = vectorized_d_relu(self.z1)
         dz1_w1 = self.a0
 
-        # Matrix multiplication - Cost with respect to weights
+        # Matrix multiplication - Cost with respect to weights - output layer
         p = (da2_z2 * dc_a2)
         g2 = dc_w2 = dz2_w2.T @ p   # OK!
+        # Matrix multiplication - Cost with respect to weights - hidden layer
         dc_a1 = (p @ dz2_a1.T)   # OK!
         dc_z1 = da1_z1 * dc_a1
         g1 = dc_w1 = dz1_w1.T @ dc_z1
-        self.w1_gradient += g1
+
         self.w2_gradient += g2
+        self.w1_gradient += g1
 
         # Matrix multiplication - Cost with respect to bias
         self.b2_gradients += p * 1
@@ -192,29 +210,28 @@ class Network:
     def d_sigmoid(self, z):
         return self.sigmoid * (1 - self.sigmoid(z))
 
-    def classify(self, x, y):
-        self.feed_forward(x)
-        print("classification: ", self.a2, " actual:", y)
+    def classify(self, x, y, batch_size):
+        batch_count = int(x.shape[0] / batch_size)
+        x_batch = np.split(x, batch_count)
+        y_batch = np.split(y, batch_count)
+        for j in range(0, len(x_batch)):
+            # feed forward the batch
+            self.feed_forward(x_batch[j])
+            print("classification: ", self.a2, " actual:", y_batch[j])
+            
 
     def cost(self, output, expected_output) -> float:
         error = output - expected_output
         return error * error
 
-    def loss(self, y_1) -> float:
-        loss = 0.0
-        for i in range(0, self.a2.shape[1]):
-            loss += self.cost(self.a2[0][i], y_1[i])
-
-        return loss
-
-    def loss_average(self, y) -> float:
+    def loss(self, y) -> float:
         # print("calculating average loss")
+        loss = 0.0
+        for i in range(0, self.a2.shape[0]):
+            for j in range(0, self.a2.shape[1]):
+                loss += self.cost(self.a2[i][j], y[j])
 
-        total_loss = 0.0
-        for y_1 in y:
-            total_loss += self.loss(y_1)
-
-        return total_loss / y.shape[0]
+        return loss / y.shape[0]
 
     def apply_gradient_descent(self, learning_rate, learning_count):
         #weights
@@ -229,19 +246,19 @@ class Network:
         self.b1 = self.b1 - learning_rate * (self.b1_gradients / learning_count)
 
     def reset_gradients(self):
-        self.w1_gradient = np.empty(shape=(input_layer_size, hidden_layer_size))
-        self.w2_gradient = np.empty(shape=(hidden_layer_size, output_layer_size))
-        self.b1_gradients = np.empty(shape=self.b1.shape)
-        self.b2_gradients = np.empty(shape=self.b2.shape)
+        self.w1_gradient = np.zeros(shape=(input_layer_size, hidden_layer_size))
+        self.w2_gradient = np.zeros(shape=(hidden_layer_size, output_layer_size))
+        self.b1_gradients = np.zeros(shape=self.b1.shape)
+        self.b2_gradients = np.zeros(shape=self.b2.shape)
 
     def learn(self, x, y, batch_size):
         # Set how many iterations you want to run this training for
-        epochs = 10000
+        epochs = 500
 
         batch_count = int(x.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
-        learning_rate = 0.01
+        learning_rate = 0.001
 
         for i in range(0, epochs):
 
@@ -253,15 +270,16 @@ class Network:
                 self.feed_forward(x_batch[j])
 
                 # calculate gradients for every data point in the batch
-                self.backpropagation(y_batch[j])
+                #self.backpropagation(y_batch[j])
+                self.backprop_alternative(y_batch[j])
 
                 # apply gradient descent to weights and biases using the stored gradients
-                self.apply_gradient_descent(learning_rate, x_batch[j].size)
+                #self.apply_gradient_descent(learning_rate, x_batch[j].size)
 
                 # reset all the stored gradients
                 self.reset_gradients()
 
-            print("epoch: ", i, " avg loss: ", self.loss_average(y))
+            print("epoch: ", i, " avg loss: ", self.loss(y))
 
 
 # remainder becomes validation data. sum of batches must not exceed 100%
@@ -292,14 +310,11 @@ NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_lay
 # CSV_Handler.load_bias_weights(network) # if you're changing the layout of the NN, disable the loading of biases and
 # weights for one iteration
 
-#NN.learn(x_sample, y_sample, batch_size)
+NN.learn(x_sample, y_sample, batch_size)
 
-NN.feed_forward(x_sample)
 # print("average loss for all training data: ", NN.loss_average(training_data))
 # print("average loss for all training data: ", NN.loss_average(sample_data))
 
-
-for j in range(0, len(x_sample)):
-    NN.classify(x_sample[j], y_sample[j])
+NN.classify(x_sample, y_sample, batch_size)
 
 # CSV_Handler.save_bias_weights(network)
