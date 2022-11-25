@@ -139,7 +139,16 @@ class Network:
         self.z2 = np.matmul(self.a1, self.w2) + self.b2
         self.a2 = relu_v(self.z2)
 
-    def backprop_alternative(self, y):
+    def ffw_backprop_gradient_alternative(self, x, y):
+        relu_v = np.vectorize(lambda x: self.relu(x))
+
+        # Implementing feedforward propagation on hidden layer
+        Z1 = np.dot(x, self.w1)
+        self.a1 = relu_v(Z1)
+ 
+        # Implementing feed forward propagation on output layer
+        Z2 = np.dot(self.a1, self.w2)
+        self.a2 = relu_v(Z2)
 
         vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
 
@@ -151,8 +160,8 @@ class Network:
         dW2 = E2 * self.a1 * vectorized_d_relu(self.a1)
  
         # Updating the weights
-        W2_update = np.dot(self.a1.T, dW1)
-        W1_update = np.dot(self.a0.T, dW2)
+        W2_update = np.dot(self.a1.T, dW1) / y.size
+        W1_update = np.dot(self.a0.T, dW2) / y.size
  
         learning_rate = 0.01
 
@@ -266,18 +275,20 @@ class Network:
             y_batch = np.split(y, batch_count)
 
             for j in range(0, len(x_batch)):
-                # feed forward the batch
-                self.feed_forward(x_batch[j])
 
-                # calculate gradients for every data point in the batch
+                self.ffw_backprop_gradient_alternative(x_batch[j], y_batch[j])
+
+                ## feed forward the batch
+                #self.feed_forward(x_batch[j])
+
+                ## calculate gradients for every data point in the batch
                 #self.backpropagation(y_batch[j])
-                self.backprop_alternative(y_batch[j])
 
-                # apply gradient descent to weights and biases using the stored gradients
+                ## apply gradient descent to weights and biases using the stored gradients
                 #self.apply_gradient_descent(learning_rate, x_batch[j].size)
 
-                # reset all the stored gradients
-                self.reset_gradients()
+                ## reset all the stored gradients
+                #self.reset_gradients()
 
             print("epoch: ", i, " avg loss: ", self.loss(y))
 
