@@ -17,7 +17,7 @@ def load_data(training_size_percent, testing_size_percent):
         # y = np.append(y, np.zeros([len(x), 1]), axis=1)
 
     with open('features_notwaldo.csv', 'r') as t:
-        x_2 = np.loadtxt(t, delimiter=',', max_rows=100)
+        x_2 = np.loadtxt(t, delimiter=',', max_rows=None)
 
         y_2 = np.zeros(shape=(x_2.shape[0], 1))
         # y_2 = np.append(y_2, np.ones([len(x_2), 1]), axis=1)
@@ -54,20 +54,22 @@ def load_data(training_size_percent, testing_size_percent):
     return x_train, x_test, x_valid, y_train, y_test, y_valid
 
 
-X_train, X_test, X_valid, y_train, y_test, y_valid = load_data(training_size_percent=80, testing_size_percent=10)
+X_train, X_test, X_valid, y_train, y_test, y_valid = load_data(training_size_percent=80, testing_size_percent=20)
 gnb = GaussianNB()
+bnb = BernoulliNB()
 
 # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=0)
 
 y_train = np.squeeze(y_train)
 y_test = np.squeeze(y_test)
+
 y_pred = gnb.fit(X_train, y_train).predict(X_test)
+y_pred_bernouli = bnb.fit(X_train, y_train).predict(X_test)
 
-
-print('/////////// TEST')
-print(y_test)
-print('//////////// PREDICTION')
-print(y_pred)
-
+# print('/////////// TEST')
+# print(y_test)
+# print('//////////// PREDICTION')
+# print(y_pred)
 
 print("Number of mislabeled points out of a total %d points : %d" % (X_test.shape[0], (y_test != y_pred).sum()))
+print("Number of mislabeled points out of a total %d points : %d" % (X_test.shape[0], (y_test != y_pred_bernouli).sum()))
