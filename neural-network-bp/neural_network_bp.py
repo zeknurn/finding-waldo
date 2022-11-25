@@ -98,16 +98,15 @@ class Network:
         self.activation_layers.append(self.a1)
         self.activation_layers.append(self.a2)
 
-        self.w1 = np.random.uniform(-0.5, 0.5, size=(input_layer_size, hidden_layer_size))
-        self.w2 = np.random.uniform(-0.5, 0.5, size=(hidden_layer_size, output_layer_size))
-        self.b1 = np.random.uniform(-0.5, 0.5, size=(batch_size, hidden_layer_size))
-        self.b2 = np.random.uniform(-0.5, 0.5, size=(batch_size, output_layer_size))
-        #self.b0 = np.random.uniform(-1,1, size=(1, input_layer_size))
+        #self.w1 = np.random.uniform(-0.5, 0.5, size=(input_layer_size, hidden_layer_size))
+        #self.w2 = np.random.uniform(-0.5, 0.5, size=(hidden_layer_size, output_layer_size))
+        #self.b1 = np.random.uniform(-0.5, 0.5, size=(batch_size, hidden_layer_size))
+        #self.b2 = np.random.uniform(-0.5, 0.5, size=(batch_size, output_layer_size))
 
-        #self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
-        #self.w2 = np.ones(shape=(hidden_layer_size, output_layer_size))
-        #self.b1 = np.ones(shape=hidden_layer_size)
-        #self.b2 = np.ones(shape=output_layer_size)
+        self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
+        self.w2 = np.ones(shape=(hidden_layer_size, output_layer_size))
+        self.b1 = np.zeros(shape=self.a1.shape)
+        self.b2 = np.zeros(shape=self.a2.shape)
 
         # Gradients
         self.w1_gradient = np.empty(shape=(input_layer_size, hidden_layer_size))
@@ -139,8 +138,11 @@ class Network:
         self.z2 = self.a2
         self.a2 = relu_v(self.a2)
 
-        # print(self.z2)
-        # print(self.a2)
+        print("a0: ", self.a0)
+        print("z1: ", self.z1)
+        print("a1: ", self.a1)
+        print("z2: ", self.z2)
+        print("a2: ", self.a2)
 
     def backpropagation(self, y):
 
@@ -290,8 +292,9 @@ NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_lay
 # CSV_Handler.load_bias_weights(network) # if you're changing the layout of the NN, disable the loading of biases and
 # weights for one iteration
 
-NN.learn(x_sample, y_sample, batch_size)
+#NN.learn(x_sample, y_sample, batch_size)
 
+NN.feed_forward(x_sample)
 # print("average loss for all training data: ", NN.loss_average(training_data))
 # print("average loss for all training data: ", NN.loss_average(sample_data))
 
