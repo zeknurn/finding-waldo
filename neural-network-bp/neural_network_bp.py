@@ -1,7 +1,8 @@
 import csv
 from tkinter import X
-
 import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
 
 
 class CSV_Handler:
@@ -39,7 +40,7 @@ class CSV_Handler:
                 neuron.weights = ast.literal_eval(row[3])  # fourth value is a string that needs to converted to a list
 
 
-def load_data(training_size_percent, testing_size_percent):
+def load_waldo_data(training_size_percent, testing_size_percent):
     print("loading data")
 
     with open('features_waldo.csv', 'r') as f:
@@ -87,6 +88,37 @@ def load_data(training_size_percent, testing_size_percent):
 
     return x_train, x_test, x_valid, y_train, y_test, y_valid
 
+def load_iris_data():
+    # Iris
+    data = load_iris()
+    # Dividing the dataset into target variable and features
+    X=data.data
+    y=data.target
+    y_new = np.empty(shape = (X.shape[0], 3))
+    for i in range(0, y.shape[0]):
+        if y[i] == [0]:
+            y_new[i] = [1,0,0]
+        elif y[i] == [1]:
+            y_new[i] = [0,1,0]
+        elif y[i] == [2]:
+            y_new[i] = [0,0,1]
+    y = y_new
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=20, random_state=4)
+    return X_train, X_test, y_train, y_test
+
+def load_xor_data():
+    # XOR training data
+    x_sample = np.array([
+        [0, 0],
+        [0, 1],
+        [1, 0],
+        [1, 1],
+    ])
+    # XOR expected labels
+    y_sample = np.atleast_2d([0, 1, 1, 0]).T
+
+    return x_sample, y_sample
 
 class Network:
 
@@ -101,15 +133,15 @@ class Network:
         self.activation_layers.append(self.a1)
         self.activation_layers.append(self.a2)
 
-        #self.w1 = np.random.uniform(-0.5, 0.5, size=(input_layer_size, hidden_layer_size))
-        #self.w2 = np.random.uniform(-0.5, 0.5, size=(hidden_layer_size, output_layer_size))
-        #self.b1 = np.random.uniform(-0.5, 0.5, size=(batch_size, hidden_layer_size))
-        #self.b2 = np.random.uniform(-0.5, 0.5, size=(batch_size, output_layer_size))
+        self.w1 = np.random.normal(0.5, size=(input_layer_size, hidden_layer_size))
+        self.w2 = np.random.normal(0.5, size=(hidden_layer_size, output_layer_size))
+        self.b1 = np.random.normal(0.5, size=(batch_size, hidden_layer_size))
+        self.b2 = np.random.normal(0.5, size=(batch_size, output_layer_size))
 
-        self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
-        self.w2 = np.ones(shape=(hidden_layer_size, output_layer_size))
-        self.b1 = np.zeros(shape=self.a1.shape)
-        self.b2 = np.zeros(shape=self.a2.shape)
+        #self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
+        #self.w2 = np.ones(shape=(hidden_layer_size, output_layer_size))
+        #self.b1 = np.zeros(shape=self.a1.shape)
+        #self.b2 = np.zeros(shape=self.a2.shape)
 
         # Gradients
         self.w1_gradient = np.zeros(shape=(input_layer_size, hidden_layer_size))
@@ -119,8 +151,8 @@ class Network:
         self.layer_count = 3
 
         # Z, sum of weighted activation + bias.
-        self.z1 = np.empty(hidden_layer_size)
-        self.z2 = np.empty(output_layer_size)
+        self.z1 = np.zeros(hidden_layer_size)
+        self.z2 = np.zeros(output_layer_size)
 
     def feed_forward(self, x):
         # populate the input layer with the data_point
@@ -139,7 +171,7 @@ class Network:
         self.z2 = np.matmul(self.a1, self.w2) + self.b2
         self.a2 = relu_v(self.z2)
 
-    def ffw_backprop_gradient_alternative(self, x, y):
+    def ffw_backprop_gradient_alternative(self, x, y, learning_rate):
         relu_v = np.vectorize(lambda x: self.relu(x))
 
         # Implementing feedforward propagation on hidden layer
@@ -161,10 +193,8 @@ class Network:
  
         # Updating the weights
         W2_update = np.dot(self.a1.T, dW1) / y.size
-        W1_update = np.dot(self.a0.T, dW2) / y.size
+        W1_update = np.dot(x.T, dW2) / y.size
  
-        learning_rate = 0.01
-
         self.w2 = self.w2 - learning_rate * W2_update
         self.w1 = self.w1 - learning_rate * W1_update
 
@@ -228,7 +258,6 @@ class Network:
             self.feed_forward(x_batch[j])
             print("classification: ", self.a2, " actual:", y_batch[j])
             
-
     def cost(self, output, expected_output) -> float:
         error = output - expected_output
         return error * error
@@ -267,7 +296,7 @@ class Network:
         batch_count = int(x.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
-        learning_rate = 0.001
+        learning_rate = 0.01
 
         for i in range(0, epochs):
 
@@ -276,7 +305,7 @@ class Network:
 
             for j in range(0, len(x_batch)):
 
-                self.ffw_backprop_gradient_alternative(x_batch[j], y_batch[j])
+                self.ffw_backprop_gradient_alternative(x_batch[j], y_batch[j], learning_rate)
 
                 ## feed forward the batch
                 #self.feed_forward(x_batch[j])
@@ -292,28 +321,25 @@ class Network:
 
             print("epoch: ", i, " avg loss: ", self.loss(y))
 
+#waldo data
+#remainder becomes validation data. sum of batches must not exceed 100%
+#x_train, x_test, x_valid, y_train, y_test, y_valid = load_waldo_data(training_size_percent=80, testing_size_percent=10)
 
-# remainder becomes validation data. sum of batches must not exceed 100%
-#x_train, x_test, x_valid, y_train, y_test, y_valid = load_data(training_size_percent=80, testing_size_percent=10)
+#iris data
+#x_train, x_test, y_train, y_test = load_iris_data()
 
-# XOR training data
-x_sample = np.array([
-    [0, 0],
-    [0, 1],
-    [1, 0],
-    [1, 1],
-])
+#XOR data 
+x_train, y_train = load_xor_data()
+x_test = x_train
+y_test = y_train
 
-# XOR expected labels
-y_sample = np.atleast_2d([0, 1, 1, 0]).T
+print('X.shape:', x_train.shape)
+print('y.shape:', y_train.shape)
 
-print('X.shape:', x_sample.shape)
-print('y.shape:', y_sample.shape)
-
-input_layer_size = x_sample.shape[1]
+input_layer_size = x_train.shape[1]
 hidden_layer_count = 1
 hidden_layer_size = 2
-output_layer_size = y_sample.shape[1]
+output_layer_size = y_train.shape[1]
 batch_size = 1 # needs to be evenly divideable by training size atm
 
 NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size, batch_size)
@@ -321,11 +347,11 @@ NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_lay
 # CSV_Handler.load_bias_weights(network) # if you're changing the layout of the NN, disable the loading of biases and
 # weights for one iteration
 
-NN.learn(x_sample, y_sample, batch_size)
+NN.learn(x_train, y_train, batch_size)
 
 # print("average loss for all training data: ", NN.loss_average(training_data))
 # print("average loss for all training data: ", NN.loss_average(sample_data))
 
-NN.classify(x_sample, y_sample, batch_size)
+NN.classify(x_test, y_test, batch_size)
 
 # CSV_Handler.save_bias_weights(network)
