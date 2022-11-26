@@ -267,7 +267,7 @@ class Network:
         loss = 0.0
         for i in range(0, y.shape[0]):
             for j in range(0, self.a2.shape[1]):
-                loss += self.cost(self.a2[j], y[i])
+                loss += self.cost(self.a2, y[i]).sum()
 
         return loss / y.shape[0]
 
@@ -325,10 +325,10 @@ class Network:
 #remainder becomes validation data. sum of batches must not exceed 100%
 #x_train, x_test, x_valid, y_train, y_test, y_valid = load_waldo_data(training_size_percent=80, testing_size_percent=10)
 
-#iris data
+##iris data
 #x_train, x_test, y_train, y_test = load_iris_data()
 
-##XOR data 
+#XOR data 
 x_train, y_train = load_xor_data()
 x_test = x_train
 y_test = y_train
