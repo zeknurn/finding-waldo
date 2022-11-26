@@ -98,7 +98,7 @@ for itr in range(iterations):
     W2 = W2 - learning_rate * W2_update
     W1 = W1 - learning_rate * W1_update
 
-    print(A2)
+    #print(A2)
 
 results.mse.plot(title="Mean Squared Error")
 
@@ -112,3 +112,5 @@ A2 = sigmoid(Z2)
  
 acc = accuracy(A2, y_test)
 print("Accuracy: {}".format(acc))
+
+plt.show()
