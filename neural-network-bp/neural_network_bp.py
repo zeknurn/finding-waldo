@@ -203,7 +203,7 @@ class Network:
         vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
 
         # Partial derivatives - output layer
-        dc_a2 = (self.a2 - y) * 2
+        dc_a2 = (self.a2 - y) #* 2
         da2_z2 = vectorized_d_relu(self.z2)
         dz2_w2 = self.a1
         # Partial derivatives - hidden layer
@@ -258,16 +258,16 @@ class Network:
             self.feed_forward(x_batch[j])
             print("classification: ", self.a2, " actual:", y_batch[j])
             
-    def cost(self, output, expected_output) -> float:
+    def cost(self, output, expected_output):
         error = output - expected_output
         return error * error
-
-    def loss(self, y) -> float:
+     
+    def loss(self, y):
         # print("calculating average loss")
         loss = 0.0
-        for i in range(0, self.a2.shape[0]):
+        for i in range(0, y.shape[0]):
             for j in range(0, self.a2.shape[1]):
-                loss += self.cost(self.a2[i][j], y[j])
+                loss += self.cost(self.a2[j], y[i])
 
         return loss / y.shape[0]
 
@@ -291,7 +291,7 @@ class Network:
 
     def learn(self, x, y, batch_size):
         # Set how many iterations you want to run this training for
-        epochs = 500
+        epochs = 1000
 
         batch_count = int(x.shape[0] / batch_size)
 
@@ -305,19 +305,19 @@ class Network:
 
             for j in range(0, len(x_batch)):
 
-                self.ffw_backprop_gradient_alternative(x_batch[j], y_batch[j], learning_rate)
+                #self.ffw_backprop_gradient_alternative(x_batch[j], y_batch[j], learning_rate)
 
-                ## feed forward the batch
-                #self.feed_forward(x_batch[j])
+                # feed forward the batch
+                self.feed_forward(x_batch[j])
 
-                ## calculate gradients for every data point in the batch
-                #self.backpropagation(y_batch[j])
+                # calculate gradients for every data point in the batch
+                self.backpropagation(y_batch[j])
 
-                ## apply gradient descent to weights and biases using the stored gradients
-                #self.apply_gradient_descent(learning_rate, x_batch[j].size)
+                # apply gradient descent to weights and biases using the stored gradients
+                self.apply_gradient_descent(learning_rate, x_batch[j].size)
 
-                ## reset all the stored gradients
-                #self.reset_gradients()
+                # reset all the stored gradients
+                self.reset_gradients()
 
             print("epoch: ", i, " avg loss: ", self.loss(y))
 
@@ -328,7 +328,7 @@ class Network:
 #iris data
 #x_train, x_test, y_train, y_test = load_iris_data()
 
-#XOR data 
+##XOR data 
 x_train, y_train = load_xor_data()
 x_test = x_train
 y_test = y_train
@@ -338,7 +338,7 @@ print('y.shape:', y_train.shape)
 
 input_layer_size = x_train.shape[1]
 hidden_layer_count = 1
-hidden_layer_size = 2
+hidden_layer_size = 3
 output_layer_size = y_train.shape[1]
 batch_size = 1 # needs to be evenly divideable by training size atm
 

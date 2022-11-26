@@ -5,7 +5,7 @@
     <ProjectGuid>43738f0b-3b23-4383-a6e9-80dce0bd9e28</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>nn_bp_test.py</StartupFile>
+    <StartupFile>neural_network_bp.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
