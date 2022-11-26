@@ -203,7 +203,7 @@ class Network:
         vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
 
         # Partial derivatives - output layer
-        dc_a2 = (self.a2 - y) #* 2
+        dc_a2 = (self.a2 - y) * 2
         da2_z2 = vectorized_d_relu(self.z2)
         dz2_w2 = self.a1
         # Partial derivatives - hidden layer
