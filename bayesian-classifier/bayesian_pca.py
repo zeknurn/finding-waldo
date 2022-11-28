@@ -17,7 +17,7 @@ def load_data(training_size_percent, testing_size_percent):
         # y = np.append(y, np.zeros([len(x), 1]), axis=1)
 
     with open('features_notwaldo.csv', 'r') as t:
-        x_2 = np.loadtxt(t, delimiter=',', max_rows=None)
+        x_2 = np.loadtxt(t, delimiter=',', max_rows=39)
 
         y_2 = np.zeros(shape=(x_2.shape[0], 1))
         # y_2 = np.append(y_2, np.ones([len(x_2), 1]), axis=1)
