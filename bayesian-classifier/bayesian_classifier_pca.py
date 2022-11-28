@@ -92,7 +92,7 @@ def probability(X, prior, dist1, dist2):
 # If underflow possible, convert multiplication to log.
 def probability(X, prior, distributions):
     for i in range(0, 32):
-        prior *= np.log2(distributions[i].pdf(X[i]))
+        prior *= distributions[i].pdf(X[i])
         # print('Thinking...', prior, i)
 
     return prior
