@@ -30,32 +30,9 @@ def load_waldo_data(nr):
     y = y[randomize]
     print('done')
     return x, y
-    # calculate the last row index of the training and testing samples
-    # last_row_training = int(rows * training_size_percent / 100)
-    # last_row_testing = last_row_training + int(rows * testing_size_percent / 100)
-    # slice the matrix into three by using the row indexes
-    # x_train = x[:last_row_training]
-    # y_train = y[:last_row_training]
-    # x_test = x[last_row_training:last_row_testing]
-    # y_test = y[last_row_training:last_row_testing]
-    # x_valid = x[last_row_testing:]
-    # y_valid = y[last_row_testing:]
-
-    # print("sample sizes: data: ", x.shape, " training: ", x_train.shape, " test:", x_test.shape,
-    #       " validation:", x_valid.shape)
-    # x_train, x_test, y_train, y_test
-
-    # return x_train, x_test, x_valid, y_train, y_test, y_valid
 
 
-# fit a probability distribution to a univariate data sample
-
-
-# calculate the independent conditional probability
-
-
-nr_data_points = 10
-
+nr_data_points = 1000
 # Load data
 X_example, y_example = make_blobs(n_samples=50, centers=2, n_features=2, random_state=1)
 X, y = load_waldo_data(nr_data_points)
@@ -90,12 +67,28 @@ def probability(X, prior, dist1, dist2):
 
 
 # If underflow possible, convert multiplication to log.
-def probability(X, prior, distributions):
-    for i in range(0, 32):
-        prior *= distributions[i].pdf(X[i])
-        # print('Thinking...', prior, i)
+# def probability(X, prior, distributions):
+#     # prior = 1
+#     c = np.empty(distributions.shape[0])
+#
+#     for i in range(0, 32):
+#    # for i in range(0, distributions.shape[0]):
+#         value = distributions[i].pdf(X[i])
+#         c[i] = value
+#         prior *= value
+#     return prior
 
-    return prior
+def probability(X, prior, distributions):
+    log_arr = np.empty(distributions.shape[0])
+    for j in range(0, distributions.shape[0]):
+        log_arr[j] = distributions[j].pdf(X[j])
+    return log_arr
+
+
+
+def logsumexp(x):
+    c = x.max()
+    return c + np.log(np.sum(np.exp(x - c)))
 
 
 # Loop, rad N. 6144
@@ -124,11 +117,16 @@ score = 0
 # classify one example
 print(nr_data_points)
 for i in range(nr_data_points):
-    Xsample, ysample = X[i], y[i]
-    # py0 = probability(Xsample, priory0, X1y0, X2y0) # given waldo
-    # py1 = probability(Xsample, priory1, X1y1, X2y1) # given not waldo
-    py0 = probability(Xsample, priory0, dist0)  # Cumulative probability given not Waldo
-    py1 = probability(Xsample, priory1, dist1)  # CDF probability given not Waldo
+    Xsample, ysample = X[i], y[i]  # en rad
+    # py0 = probability(Xsample, priory0, X1y0, X2y0) # given not Waldo
+    # py1 = probability(Xsample, priory1, X1y1, X2y1) # given Waldo
+    log_arr0 = probability(Xsample, priory0, dist0)  # Cumulative probability given not Waldo
+    log_arr1 = probability(Xsample, priory1, dist1)  # CDF probability given not Waldo
+
+    # Test
+    py0 = priory0 * logsumexp(log_arr0)
+    py1 = priory1 * logsumexp(log_arr1)
+
     print('P(y=0 | %s) = %.3f' % (Xsample, py0 * 100))
     print('P(y=1 | %s) = %.3f' % (Xsample, py1 * 100))
     if py0 > py1 and y[i] == 0:
@@ -138,23 +136,3 @@ for i in range(nr_data_points):
     print('Truth: y=%d' % ysample)
 
 print(score / nr_data_points)
-
-# # generate 2d classification dataset
-
-# print(Xy0.shape, Xy1.shape)
-# print(Xy1)
-# # calculate priors
-# priory0 = len(Xy0) / len(X)
-# priory1 = len(Xy1) / len(X)
-# # create PDFs for y==0
-# distX1y0 = fit_distribution(Xy0[:, 0])
-# distX2y0 = fit_distribution(Xy0[:, 1])
-# # create PDFs for y==1
-# distX1y1 = fit_distribution(Xy1[:, 0])
-# distX2y1 = fit_distribution(Xy1[:, 1])
-
-# py0 = probability(Xsample, priory0, distX1y0, distX2y0)
-# py1 = probability(Xsample, priory1, distX1y1, distX2y1)
-# print('P(y=0 | %s) = %.3f' % (Xsample, py0 * 100))
-# print('P(y=1 | %s) = %.3f' % (Xsample, py1 * 100))
-# print('Truth: y=%d' % ysample)
