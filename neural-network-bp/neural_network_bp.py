@@ -1,4 +1,5 @@
 import csv
+from os import access
 from tkinter import X
 import numpy as np
 from sklearn.datasets import load_iris
@@ -154,6 +155,8 @@ class Network:
         self.z1 = np.zeros(hidden_layer_size)
         self.z2 = np.zeros(output_layer_size)
 
+        self.accuracy_count = 0
+
     def feed_forward(self, x):
         # populate the input layer with the data_point
         self.a0 = x
@@ -256,8 +259,12 @@ class Network:
         for j in range(0, len(x_batch)):
             # feed forward the batch
             self.feed_forward(x_batch[j])
-            print("classification: ", self.a2, " actual:", y_batch[j])
-            
+            print("classification:\n", self.a2, "\nlabels:\n", y_batch[j])
+            self.accuracy(self.a2, y_batch[j])
+
+    def accuracy(self, y_pred, y_true):
+        self.accuracy_count += (y_pred.argmax(axis=1) == y_true.argmax(axis=1)).mean()
+        
     def cost(self, output, expected_output):
         error = output - expected_output
         return error * error
@@ -328,7 +335,7 @@ class Network:
 ##iris data
 #x_train, x_test, y_train, y_test = load_iris_data()
 
-#XOR data 
+##XOR data 
 x_train, y_train = load_xor_data()
 x_test = x_train
 y_test = y_train
@@ -352,6 +359,8 @@ NN.learn(x_train, y_train, batch_size)
 # print("average loss for all training data: ", NN.loss_average(training_data))
 # print("average loss for all training data: ", NN.loss_average(sample_data))
 
+
 NN.classify(x_test, y_test, batch_size)
+print("accuracy: ", (NN.accuracy_count / int(x_test.shape[0] / batch_size) * 100))
 
 # CSV_Handler.save_bias_weights(network)
