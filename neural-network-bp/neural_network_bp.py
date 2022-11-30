@@ -1,5 +1,5 @@
 import csv
-from os import access
+import os
 from tkinter import X
 import numpy as np
 from sklearn.datasets import load_iris
@@ -10,36 +10,28 @@ class CSV_Handler:
     def save_bias_weights(network):
         print("saving bias and weights")
 
-        headers = ['layer_id', 'neuron_id', 'bias', 'weights']
-        rows = []
+        for i in range(len(network.biases)):
+            np.savetxt("b{}.csv".format(i+1), network.biases[i], delimiter=",")
 
-        for i in range(0, len(network)):
-            for neuron in network[i]:
-                rows.append([i, neuron.neuron_id, neuron.bias, neuron.weights])
-
-        with open('bias_weights.csv', 'w', newline='') as f:
-
-            # using csv.writer method from CSV package
-            write = csv.writer(f)
-
-            write.writerow(headers)
-            write.writerows(rows)
+        for i in range(len(network.weights)):
+            np.savetxt("w{}.csv".format(i+1), network.weights[i], delimiter=",")
 
     def load_bias_weights(network):
         print("loading bias and weights")
-        import ast
-        with open('bias_weights.csv', newline='') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 
-            # skip first row because it's headers
-            next(reader, None)
+        for i in range(len(network.biases)):
+            filename = "b{}.csv".format(i+1)
+            if os.path.exists(filename):
+                bias = np.loadtxt(filename, delimiter=",", ndmin=2)
+                if bias.shape == network.biases[i].shape:
+                    network.biases[i] = bias
 
-            for row in reader:
-                layer = network[int(row[0])]  # first value is the layer id
-                neuron = layer[int(row[1])]  # second value is the neuron id
-                neuron.bias = float(row[2])  # third value is the bias
-                neuron.weights = ast.literal_eval(row[3])  # fourth value is a string that needs to converted to a list
-
+        for i in range(len(network.weights)):
+            filename = "w{}.csv".format(i+1)
+            if os.path.exists(filename):
+                weight = np.loadtxt("w{}.csv".format(i+1), delimiter=",", ndmin=2)
+                if weight.shape == network.weights[i].shape:
+                    network.weights[i] = weight
 
 def load_waldo_data(training_size_percent, testing_size_percent):
     print("loading data")
@@ -138,6 +130,14 @@ class Network:
         self.w2 = np.random.normal(0.5, size=(hidden_layer_size, output_layer_size))
         self.b1 = np.random.normal(0.5, size=(batch_size, hidden_layer_size))
         self.b2 = np.random.normal(0.5, size=(batch_size, output_layer_size))
+
+        self.weights = []
+        self.weights.append(self.w1)
+        self.weights.append(self.w2)
+
+        self.biases = []
+        self.biases.append(self.b1)
+        self.biases.append(self.b2)
 
         #self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
         #self.w2 = np.ones(shape=(hidden_layer_size, output_layer_size))
@@ -351,8 +351,8 @@ batch_size = 1 # needs to be evenly divideable by training size atm
 
 NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size, batch_size)
 
-# CSV_Handler.load_bias_weights(network) # if you're changing the layout of the NN, disable the loading of biases and
-# weights for one iteration
+CSV_Handler.load_bias_weights(NN) # if you're changing the layout of the NN, disable the loading of biases and
+## weights for one iteration
 
 NN.learn(x_train, y_train, batch_size)
 
@@ -363,4 +363,4 @@ NN.learn(x_train, y_train, batch_size)
 NN.classify(x_test, y_test, batch_size)
 print("accuracy: ", (NN.accuracy_count / int(x_test.shape[0] / batch_size) * 100))
 
-# CSV_Handler.save_bias_weights(network)
+CSV_Handler.save_bias_weights(NN)
