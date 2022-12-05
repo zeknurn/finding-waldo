@@ -165,18 +165,19 @@ for i in range(0, population_count):
 
 # Apply fitness to population ##################
 sorted_list = list(rank_fitness())
+print(sorted_list)
 # Crossover #########################
 print(len(sorted_list))
 for i in range(0, len(sorted_list) - 1, 2):
     print('Crossover loop')
-    print('i:', i, ' i + 1: ', i + 1)
+    # print('i:', i, ' i + 1: ', i + 1)
     pop_index1 = sorted_list[i]
     pop_index2 = sorted_list[i + 1]
     p1 = populations[pop_index1]
     p2 = populations[pop_index2]
     c1, c2 = crossover(p1, p2)
-    print('C1', c1)
-    print('C2', c2)
+    # print('C1', c1)
+    # print('C2', c2)
 
     ## Apply mutation here
 
@@ -184,8 +185,8 @@ for i in range(0, len(sorted_list) - 1, 2):
     populations[pop_index2] = c2
 print('Crossover Done')
 
-print('Sorted list:', len(sorted_list))
-print('Populations: ', len(populations))
+# print('Sorted list:', len(sorted_list))
+# print('Populations: ', len(populations))
 
 sorted_list = list(rank_fitness())
 for key, value in sorted_list:
