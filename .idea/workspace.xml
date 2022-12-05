@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="08ccc1ad-a2ef-4d72-b9b7-44ce207169be" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/bayesian-classifier/bayesian_with_GA.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bayesian-classifier/bayesian_classifier_pca.py" beforeDir="false" afterPath="$PROJECT_DIR$/bayesian-classifier/bayesian_classifier_pca.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bayesian-classifier/bayesian_with_GA.py" beforeDir="false" afterPath="$PROJECT_DIR$/bayesian-classifier/bayesian_with_GA.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
