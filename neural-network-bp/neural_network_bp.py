@@ -1,10 +1,8 @@
-import csv
 import os
 from tkinter import X
 import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-
 
 class CSV_Handler:
     def save_bias_weights(network):
@@ -24,17 +22,17 @@ class CSV_Handler:
             if os.path.exists(filename):
                 bias = np.loadtxt(filename, delimiter=",", ndmin=2)
                 if bias.shape == network.biases[i].shape:
-                    network.biases[i] = bias
+                    np.copyto(network.biases[i], bias)
 
         for i in range(len(network.weights)):
             filename = "w{}.csv".format(i+1)
             if os.path.exists(filename):
                 weight = np.loadtxt("w{}.csv".format(i+1), delimiter=",", ndmin=2)
                 if weight.shape == network.weights[i].shape:
-                    network.weights[i] = weight
+                    np.copyto(network.weights[i], weight)
 
 def load_waldo_data(training_size_percent, testing_size_percent):
-    print("loading data")
+    print("loading waldo data")
 
     with open('features_waldo.csv', 'r') as f:
         x = np.loadtxt(f, delimiter=',')
@@ -82,6 +80,7 @@ def load_waldo_data(training_size_percent, testing_size_percent):
     return x_train, x_test, x_valid, y_train, y_test, y_valid
 
 def load_iris_data():
+    print("loading iris data")
     # Iris
     data = load_iris()
     # Dividing the dataset into target variable and features
@@ -101,6 +100,7 @@ def load_iris_data():
     return X_train, X_test, y_train, y_test
 
 def load_xor_data():
+    print("loading XOR data")
     # XOR training data
     x_sample = np.array([
         [0, 0],
@@ -121,28 +121,25 @@ class Network:
         self.a1 = np.zeros(shape=(batch_size, hidden_layer_size))
         self.a2 = np.zeros(shape=(batch_size, output_layer_size))
 
-        self.activation_layers = []
-        self.activation_layers.append(self.a0)
-        self.activation_layers.append(self.a1)
-        self.activation_layers.append(self.a2)
+        self.activation_layers = [self.a0, self.a1, self.a2]
 
-        self.w1 = np.random.normal(0.5, size=(input_layer_size, hidden_layer_size))
-        self.w2 = np.random.normal(0.5, size=(hidden_layer_size, output_layer_size))
-        self.b1 = np.random.normal(0.5, size=(batch_size, hidden_layer_size))
-        self.b2 = np.random.normal(0.5, size=(batch_size, output_layer_size))
+        self.w1 = np.random.uniform(0.1, 1.0, size=(input_layer_size, hidden_layer_size))
+        self.w2 = np.random.uniform(0.1, 1.0, size=(hidden_layer_size, output_layer_size))
+        self.b1 = np.random.uniform(0.1, 1.0, size=(batch_size, hidden_layer_size))
+        self.b2 = np.random.uniform(0.1, 1.0, size=(batch_size, output_layer_size))
 
-        self.weights = []
-        self.weights.append(self.w1)
-        self.weights.append(self.w2)
-
-        self.biases = []
-        self.biases.append(self.b1)
-        self.biases.append(self.b2)
+        #self.w1 = np.random.normal(0.5, size=(input_layer_size, hidden_layer_size))
+        #self.w2 = np.random.normal(0.5, size=(hidden_layer_size, output_layer_size))
+        #self.b1 = np.random.normal(0.5, size=(batch_size, hidden_layer_size))
+        #self.b2 = np.random.normal(0.5, size=(batch_size, output_layer_size))
 
         #self.w1 = np.ones(shape=(input_layer_size, hidden_layer_size))
         #self.w2 = np.ones(shape=(hidden_layer_size, output_layer_size))
         #self.b1 = np.zeros(shape=self.a1.shape)
         #self.b2 = np.zeros(shape=self.a2.shape)
+
+        self.weights = [self.w1, self.w2]
+        self.biases = [self.b1, self.b2]
 
         # Gradients
         self.w1_gradient = np.zeros(shape=(input_layer_size, hidden_layer_size))
@@ -267,13 +264,12 @@ class Network:
         
     def cost(self, output, expected_output):
         error = output - expected_output
-        return error * error
+        return error**2
      
     def loss(self, y):
         # print("calculating average loss")
         loss = 0.0
-        for i in range(0, y.shape[0]):
-            for j in range(0, self.a2.shape[1]):
+        for i in range(0, y.shape[0]): # for every row in expected output
                 loss += self.cost(self.a2, y[i]).sum()
 
         return loss / y.shape[0]
@@ -298,12 +294,12 @@ class Network:
 
     def learn(self, x, y, batch_size):
         # Set how many iterations you want to run this training for
-        epochs = 1000
+        epochs = 5
 
         batch_count = int(x.shape[0] / batch_size)
 
         # Set your learning rate. 0.1 is a good starting point
-        learning_rate = 0.01
+        learning_rate = 0.001
 
         for i in range(0, epochs):
 
@@ -327,40 +323,36 @@ class Network:
                 self.reset_gradients()
 
             print("epoch: ", i, " avg loss: ", self.loss(y))
+            CSV_Handler.save_bias_weights(NN)
 
 #waldo data
 #remainder becomes validation data. sum of batches must not exceed 100%
-#x_train, x_test, x_valid, y_train, y_test, y_valid = load_waldo_data(training_size_percent=80, testing_size_percent=10)
+x_train, x_test, x_valid, y_train, y_test, y_valid = load_waldo_data(training_size_percent=80, testing_size_percent=10)
 
 ##iris data
 #x_train, x_test, y_train, y_test = load_iris_data()
 
 ##XOR data 
-x_train, y_train = load_xor_data()
-x_test = x_train
-y_test = y_train
+#x_train, y_train = load_xor_data()
+#x_test = x_train
+#y_test = y_train
 
 print('X.shape:', x_train.shape)
 print('y.shape:', y_train.shape)
 
 input_layer_size = x_train.shape[1]
 hidden_layer_count = 1
-hidden_layer_size = 3
+hidden_layer_size = 32
 output_layer_size = y_train.shape[1]
 batch_size = 1 # needs to be evenly divideable by training size atm
 
 NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size, batch_size)
 
-CSV_Handler.load_bias_weights(NN) # if you're changing the layout of the NN, disable the loading of biases and
-## weights for one iteration
+CSV_Handler.load_bias_weights(NN)
 
 NN.learn(x_train, y_train, batch_size)
 
-# print("average loss for all training data: ", NN.loss_average(training_data))
-# print("average loss for all training data: ", NN.loss_average(sample_data))
-
-
 NN.classify(x_test, y_test, batch_size)
-print("accuracy: ", (NN.accuracy_count / int(x_test.shape[0] / batch_size) * 100))
+print("accuracy: ", (NN.accuracy_count / int(x_test.shape[0] / batch_size) * 100, "%"))
 
 CSV_Handler.save_bias_weights(NN)
