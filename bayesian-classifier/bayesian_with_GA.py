@@ -80,8 +80,8 @@ def probability(X, prior, distributions):
 # Works identically as the one above, except different indexes.
 def probability_ga(X, distributions, population):
     log_arr = np.empty(distributions.shape[0])
-    for j in range(0, distributions.shape[0]):
-        log_arr[j] = distributions[population[j]].pdf(X[j])
+    for k in range(0, distributions.shape[0]):
+        log_arr[k] = distributions[population[k]].pdf(X[k])
     return log_arr
 
 
@@ -112,6 +112,7 @@ def fitness(Xsample, ysample, population):
 def rank_fitness():
     print('Rank fitness')
     pop_score = {}
+    print(nr_data_points)
     for i in range(0, 5):  # Populations, pop_index : score.
         score = 0
         for j in range(0, nr_data_points):
@@ -124,8 +125,12 @@ def rank_fitness():
 def crossover(p1, p2):
     print('Crossover fun')
     split = int(len(p1) / 2)
-    c1 = p1[:split] + p2[split:]
-    c2 = p2[:split] + p1[split:]
+    c1 = p1[:split]
+    c1 = np.append(c1, p2[split:])
+    c2 = p2[:split]
+    c2 = np.append(c2, p1[split:])
+    print(c1)
+    print(c2)
     return c1, c2
 
 
@@ -158,12 +163,11 @@ for i in range(0, population_count):
     np.random.shuffle(pop0)
     populations.append(pop0)
 
-
 # Apply fitness to population ##################
 sorted_list = list(rank_fitness())
-
 # Crossover #########################
-for i in range(0, len(sorted_list), 2):
+print(len(sorted_list))
+for i in range(0, len(sorted_list) - 1, 2):
     print('Crossover loop')
     print('i:', i, ' i + 1: ', i + 1)
     pop_index1 = sorted_list[i]
@@ -171,6 +175,8 @@ for i in range(0, len(sorted_list), 2):
     p1 = populations[pop_index1]
     p2 = populations[pop_index2]
     c1, c2 = crossover(p1, p2)
+    print('C1', c1)
+    print('C2', c2)
 
     ## Apply mutation here
 
@@ -178,5 +184,9 @@ for i in range(0, len(sorted_list), 2):
     populations[pop_index2] = c2
 print('Crossover Done')
 
+print('Sorted list:', len(sorted_list))
+print('Populations: ', len(populations))
+
 sorted_list = list(rank_fitness())
-print(sorted_list)
+for key, value in sorted_list:
+    print(key, value)
