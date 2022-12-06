@@ -126,7 +126,6 @@ def init():
 def classify():
     score = 0
     # classify one example
-    print(nr_data_points)
     for i in range(nr_data_points):
         Xsample, ysample = X[i], y[i]  # en rad
         # py0 = probability(Xsample, priory0, X1y0, X2y0) # given not Waldo
@@ -147,10 +146,10 @@ def classify():
             score += 1
         print('Truth: y=%d' % ysample)
 
-    print("score: ", score / nr_data_points * 100, "%")
+    print("Without GA, score: ", score / nr_data_points * 100, "%, number of data points: ", nr_data_points)
 
 
-nr_data_points = 200
+nr_data_points = 2
 start_time = time.time()
 
 X, y, dist0, dist1, priory0, priory1 = init()

@@ -256,8 +256,7 @@ def classify():
             score += 1
         print('Truth: y=%d' % ysample)
 
-    print("score: ", score / nr_data_points * 100, "%")
-
+    print("With GA, score: ", score / nr_data_points * 100, "%, number of data points: ", nr_data_points)
 
 
 # Apply GA #########################
@@ -265,11 +264,13 @@ def classify():
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
 population_count = 10
-nr_data_points = 200
+nr_data_points = 2
 epochs = 1
+start_time = time.time()
 
 np.random.seed(1337)  # Reproducible results
 X, y, dist0, dist1, priory0, priory1 = init()
 #run_ga(epochs)
 
 classify()
+print("--- %s seconds ---" % (time.time() - start_time))
