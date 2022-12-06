@@ -35,49 +35,49 @@ def load_waldo_data(training_size_percent, testing_size_percent):
     print("loading waldo data")
 
     with open('features_waldo.csv', 'r') as f:
-        x = np.loadtxt(f, delimiter=',')
+        x_waldo = np.loadtxt(f, delimiter=',')
 
-        y = np.ones(shape=(x.shape[0], 1))
-        y = np.append(y, np.zeros([len(x), 1]), axis=1)
+        y_waldo = np.ones(shape=(x_waldo.shape[0], 1))
+        y_waldo = np.append(y_waldo, np.zeros([len(x_waldo), 1]), axis=1)
 
     with open('features_notwaldo.csv', 'r') as t:
-        x_2 = np.loadtxt(t, delimiter=',')
+        x_notwaldo = np.loadtxt(t, delimiter=',')
 
-        y_2 = np.zeros(shape=(x_2.shape[0], 1))
-        y_2 = np.append(y_2, np.ones([len(x_2), 1]), axis=1)
+        y_notwaldo = np.zeros(shape=(x_notwaldo.shape[0], 1))
+        y_notwaldo = np.append(y_notwaldo, np.ones([len(x_notwaldo), 1]), axis=1)
 
-    x = np.append(x, x_2, axis=0)
-    y = np.append(y, y_2, axis=0)
+    x_mixed = np.append(x_waldo, x_notwaldo, axis=0)
+    y_mixed = np.append(y_waldo, y_notwaldo, axis=0)
 
     # set the random seed to get the same result every run
     np.random.seed(0)
 
     # get the row count of the matrix
-    rows = x.shape[0]
+    rows = x_mixed.shape[0]
 
     # shuffle the rows of the matrix
-    randomize = np.arange(len(x))
+    randomize = np.arange(len(x_mixed))
     np.random.shuffle(randomize)
-    x = x[randomize]
-    y = y[randomize]
+    x_mixed = x_mixed[randomize]
+    y_mixed = y_mixed[randomize]
 
     # calculate the last row index of the training and testing samples
     last_row_training = int(rows * training_size_percent / 100)
     last_row_testing = last_row_training + int(rows * testing_size_percent / 100)
 
     # slice the matrix into three by using the row indexes
-    x_train = x[:last_row_training]
-    y_train = y[:last_row_training]
-    x_test = x[last_row_training:last_row_testing]
-    y_test = y[last_row_training:last_row_testing]
-    x_valid = x[last_row_testing:]
-    y_valid = y[last_row_testing:]
+    x_train = x_mixed[:last_row_training]
+    y_train = y_mixed[:last_row_training]
+    x_test = x_mixed[last_row_training:last_row_testing]
+    y_test = y_mixed[last_row_training:last_row_testing]
+    x_valid = x_mixed[last_row_testing:]
+    y_valid = y_mixed[last_row_testing:]
 
-    print("sample sizes: data: ", x.shape, " training: ", x_train.shape, " test:", x_test.shape,
+    print("sample sizes: data: ", x_mixed.shape, " training: ", x_train.shape, " test:", x_test.shape,
           " validation:", x_valid.shape)
     x_train, x_test, y_train, y_test
 
-    return x_train, x_test, x_valid, y_train, y_test, y_valid
+    return x_train, x_test, x_valid, y_train, y_test, y_valid, x_waldo, y_waldo
 
 def load_iris_data():
     print("loading iris data")
@@ -152,7 +152,7 @@ class Network:
         self.z1 = np.zeros(hidden_layer_size)
         self.z2 = np.zeros(output_layer_size)
 
-        self.accuracy_count = 0
+        self.accuracy_sum = 0
 
     def feed_forward(self, x):
         # populate the input layer with the data_point
@@ -248,6 +248,7 @@ class Network:
         batch_count = int(x.shape[0] / batch_size)
         x_batch = np.split(x, batch_count)
         y_batch = np.split(y, batch_count)
+
         for j in range(0, len(x_batch)):
             # feed forward the batch
             self.feed_forward(x_batch[j])
@@ -255,7 +256,7 @@ class Network:
             self.accuracy(self.a2, y_batch[j])
 
     def accuracy(self, y_pred, y_true):
-        self.accuracy_count += (y_pred.argmax(axis=1) == y_true.argmax(axis=1)).mean()
+        self.accuracy_sum += (y_pred.argmax(axis=1) == y_true.argmax(axis=1)).mean()
         
     def cost(self, output, expected_output):
         error = output - expected_output
@@ -291,7 +292,7 @@ class Network:
         print("training network")
 
         # Set how many iterations you want to run this training for
-        epochs = 10
+        epochs = 100
 
         batch_count = int(x.shape[0] / batch_size)
 
@@ -324,7 +325,7 @@ class Network:
 
 #waldo data
 #remainder becomes validation data. sum of batches must not exceed 100%
-x_train, x_test, x_valid, y_train, y_test, y_valid = load_waldo_data(training_size_percent=80, testing_size_percent=10)
+x_train, x_test, x_valid, y_train, y_test, y_valid, x_waldo, y_waldo = load_waldo_data(training_size_percent=80, testing_size_percent=20)
 
 ##iris data
 #x_train, x_test, y_train, y_test = load_iris_data()
@@ -347,9 +348,12 @@ NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_lay
 
 CSV_Handler.load_bias_weights(NN)
 
-NN.learn(x_train, y_train, batch_size)
+#NN.learn(x_train, y_train, batch_size)
 
 NN.classify(x_test, y_test, batch_size)
-print("accuracy: ", (NN.accuracy_count / int(x_test.shape[0] / batch_size) * 100, "%"))
+classification_count = int(x_test.shape[0] / batch_size)
 
-CSV_Handler.save_bias_weights(NN)
+#NN.classify(x_waldo, y_waldo, batch_size)
+#classification_count = int(x_waldo.shape[0] / batch_size)
+
+print("accuracy: ", (NN.accuracy_sum / classification_count * 100, "%"))
