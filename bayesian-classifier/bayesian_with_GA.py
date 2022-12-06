@@ -99,18 +99,24 @@ def calculate_fitness_score(Xsample, ysample, population):
 
 # Calculates fitness for each population, and replaces the previous score obtained from crossover.
 # Then the entire population is sorted, ranked, by fitness score.
-def rank_fitness(populations):
+def rank_fitness(populations, best_score_current):
     for i in range(0, len(populations)):
+        print("Ranking pop: ", i)
         populations[i] = populations[i][0], populations[i][1], cumulative_fitness(populations[i][1])
     populations = sorted(populations, key=lambda x: x[2], reverse=True)
 
-    np.savetxt('ga_best_population.csv', populations[0][1], delimiter=',')
-    return populations
+    best_score_new = populations[0][2]
+    print("Best score: ", best_score_new)
+    if best_score_new > best_score_current:
+        np.savetxt('ga_best_population.csv', populations[0][1], delimiter=',')
+
+    return populations, best_score_new
 
 
 def cumulative_fitness(population):
     tmp = 0
     for j in range(0, nr_data_points):
+        print("Calculating fitness for data point nr: ", j)
         tmp += calculate_fitness_score(X[j], y[j], population)
 
     return tmp
@@ -138,7 +144,6 @@ def crossover_inner(p1, p2):
 def crossover_outer(populations):
     step = int(len(populations) / 2)
     for i in range(0, step):
-        print(i, i + step)
         p1 = populations[i][1]  # Values
         p2 = populations[i + step][1]
         c1, c2 = crossover_inner(p1, p2)
@@ -170,15 +175,17 @@ def create_population():
     populations = []
     starting_pop = np.arange(6144)
     for i in range(0, population_count):
+        print("Creating pop: ", i)
         np.random.shuffle(starting_pop)
         tmp = np.copy(starting_pop)
-        populations.append((i, tmp, cumulative_fitness(starting_pop)))
+        populations.append((i, tmp, 0))
     return populations
 
 
 def run_ga(epochs):
     print('Creating starting population')
     populations = create_population()
+    best_score_current = 0
     for i in range(0, epochs):
         print('Epoch: ', i, ':')
         # print('Population: ', populations)
@@ -192,7 +199,11 @@ def run_ga(epochs):
         # print(populations)
         print('Starting rank fitness - Epoch: ', i)
 
-        populations = rank_fitness(populations)
+        populations, best_score_new = rank_fitness(populations, best_score_current)
+
+        if best_score_new > best_score_current:
+            best_score_current = best_score_new
+
         print('Rank fitness done - Epoch: ', i)
         print(populations)
 
@@ -263,14 +274,14 @@ def classify():
 # Representation of distributions.
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
-population_count = 10
+population_count = 100
 nr_data_points = 2
-epochs = 1
+epochs = 100
 start_time = time.time()
 
 np.random.seed(1337)  # Reproducible results
 X, y, dist0, dist1, priory0, priory1 = init()
-#run_ga(epochs)
+run_ga(epochs)
 
 classify()
 print("--- %s seconds ---" % (time.time() - start_time))

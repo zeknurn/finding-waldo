@@ -5,7 +5,7 @@
     <ProjectGuid>556cedcf-7865-486b-9cea-667c3e277787</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>bayesian_classifier_pca.py</StartupFile>
+    <StartupFile>bayesian_with_GA.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
