@@ -5,7 +5,7 @@
     <ProjectGuid>556cedcf-7865-486b-9cea-667c3e277787</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>bayesian_classifier.py</StartupFile>
+    <StartupFile>bayesian_classifier_pca.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -23,7 +23,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="bayesian_classifier.py" />
+    <Compile Include="bayesian_classifier_pca.py" />
+    <Compile Include="bayesian_pca.py" />
+    <Compile Include="bayesian_with_GA.py" />
     <Compile Include="feature_extraction.py" />
+    <Compile Include="fuzzy_classification.py" />
+    <Compile Include="gclm_preprocessing.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

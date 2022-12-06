@@ -103,6 +103,8 @@ def rank_fitness(populations):
     for i in range(0, len(populations)):
         populations[i] = populations[i][0], populations[i][1], cumulative_fitness(populations[i][1])
     populations = sorted(populations, key=lambda x: x[2], reverse=True)
+
+    np.savetxt('ga_best_population.csv', populations[0][1], delimiter=',')
     return populations
 
 
@@ -193,7 +195,6 @@ def run_ga(epochs):
         populations = rank_fitness(populations)
         print('Rank fitness done - Epoch: ', i)
         print(populations)
-    return populations
 
 
 def init():
@@ -201,9 +202,15 @@ def init():
     X, y = load_waldo_data(nr_data_points)
     y = np.ndarray.flatten(y)  # Flatten to match dimensions
     y = y.astype(int)
+    print('Waldo dataset:')
+    print('Waldo shape X:', X.shape)
+    print('Waldo shape y:', y.shape)
+
     # sort data into classes
     Xy0 = X[y == 0]
     Xy1 = X[y == 1]
+    print('Sort data into classes')
+    print(Xy0.shape, Xy1.shape)
     # Done for dtype.
     X1y0 = fit_distribution(Xy0[:, 0])
 
@@ -219,9 +226,38 @@ def init():
     for i in range(0, Xy1.shape[1]):
         dist1[i] = fit_distribution(Xy1[:, i])
 
-    return X, y, dist0, dist1
-    # priory0 = len(Xy0) / len(X)
-    # priory1 = len(Xy1) / len(X)
+    priory0 = len(Xy0) / len(X)
+    priory1 = len(Xy1) / len(X)
+
+    return X, y, dist0, dist1, priory0, priory1
+
+
+def classify():
+    #Load best population
+    best_population = np.loadtxt('ga_best_population.csv', delimiter=',').astype(np.int64)
+
+    score = 0
+
+    for i in range(nr_data_points):
+        Xsample, ysample = X[i], y[i]  # en rad
+        log_arr0 = probability_ga(Xsample, dist0, best_population)  # Cumulative probability given not Waldo
+        log_arr1 = probability_ga(Xsample, dist1, best_population)  # CDF probability given not Waldo
+
+        # Test
+        py0 = logsumexp(log_arr0) # * priory0
+        py1 = logsumexp(log_arr1) # * priory1
+
+        print('Data point: ', i)
+        print('P(y=0 | %s)' % py0)
+        print('P(y=1 | %s)' % py1)
+        if py0 > py1 and y[i] == 0:
+            score += 1
+        elif py1 > py0 and y[i] == 1:
+            score += 1
+        print('Truth: y=%d' % ysample)
+
+    print("score: ", score / nr_data_points * 100, "%")
+
 
 
 # Apply GA #########################
@@ -229,11 +265,11 @@ def init():
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
 population_count = 10
-nr_data_points = 2
+nr_data_points = 200
 epochs = 1
 
 np.random.seed(1337)  # Reproducible results
-X, y, dist0, dist1 = init()
-best_fit_population = run_ga(epochs)
-# np.savetxt('ga_out_new.csv', best_fit_population, delimiter=',')
-print(best_fit_population[0][1])
+X, y, dist0, dist1, priory0, priory1 = init()
+#run_ga(epochs)
+
+classify()
