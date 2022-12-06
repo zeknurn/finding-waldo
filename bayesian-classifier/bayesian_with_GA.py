@@ -41,21 +41,6 @@ def load_waldo_data(nr):
     return x, y
 
 
-# Load data
-nr_data_points = 2
-X, y = load_waldo_data(nr_data_points)
-y = np.ndarray.flatten(y)  # Flatten to match dimensions
-y = y.astype(int)
-
-# sort data into classes
-Xy0 = X[y == 0]
-Xy1 = X[y == 1]
-
-
-# print('Sort data into classes')
-# print(Xy0.shape, Xy1.shape)
-
-
 # This function fits each and every single variable in a column to a normal distribution.
 # The normal distribution for each variable is then stored in an array upon returning.
 def fit_distribution(data):
@@ -118,6 +103,8 @@ def rank_fitness():
     print('Rank fitness score:')
     for i in range(0, len(populations)):
         populations[i] = populations[i][0], populations[i][1], cumulative_fitness(populations[i][1])
+    print('Before ranking:')
+    print(populations)
     sorted(populations, key=lambda x: x[2])
     print('Ranked populations:')
     print(populations)
@@ -130,7 +117,7 @@ def cumulative_fitness(population):
     return tmp
 
 
-def crossover(p1, p2):
+def crossover_inner(p1, p2):
     print('Crossover fun')
     split = int(len(p1) / 2)
     c1 = p1[:split]
@@ -140,86 +127,96 @@ def crossover(p1, p2):
     return c1, c2
 
 
-# Done for dtype.
-X1y0 = fit_distribution(Xy0[:, 0])
+# Crossover populations
+def crossover_outer():
+    for i in range(0, len(populations), 2):
+        print('Before crossover')
+        print(populations)
+        p1 = populations[i][1]  # Values
+        p2 = populations[i + 1][1]
+        c1, c2 = crossover_inner(p1, p2)
+        populations[i] = populations[i][0], c1, populations[i][2]
+        populations[i + 1] = populations[i + 1][0], c2, populations[i + 1][2]
+        print('After crossover')
+        print(populations)
 
-# 6144
-# One distribution for each colum in X, where y == 0
-# Distributions for y == 0
-dist0 = np.empty(Xy0.shape[1], dtype=type(X1y0))
-for i in range(0, Xy0.shape[1]):
-    dist0[i] = fit_distribution(Xy0[:, i])
 
-# Distributions for y == 1
-dist1 = np.empty(Xy1.shape[1], dtype=type(X1y0))
-for i in range(0, Xy1.shape[1]):
-    dist1[i] = fit_distribution(Xy1[:, i])
+# Apply mutation
+# Selects a population from populations randomly
+# Thereafter select both an index and value which is randomly selected and replaced with a random value within range.
+def mutate():
+    mut_sample_index = np.random.choice(population_count, 10)
+    mut_pop_sequence_index = np.random.choice(6144, 10)
+    mut_value = np.random.choice(6144, 10)
 
-priory0 = len(Xy0) / len(X)
-priory1 = len(Xy1) / len(X)
+    for index in mut_sample_index:
+        print('Before mutation')
+        mutation_sample = populations[index][1]
+        print(sum(mutation_sample))
+        mutation_sample[mut_pop_sequence_index] = mut_value[random.randint(0, 9)]
+        print('After mutation')
+        print(sum(mutation_sample))
+
+
+# Creates ascending numerical array, 0 to N = 6144, which is the number of distributions
+# Populations follow this format:
+# 0, index
+# 1 [123, 234, 35345, 342]
+# 2, fitness score
+def create_population():
+    starting_pop = np.arange(6144)
+    print('Initialize starting populations:')
+    for i in range(0, population_count):
+        np.random.shuffle(starting_pop)
+        tmp = np.copy(starting_pop)
+        populations.append((i, tmp, cumulative_fitness(starting_pop)))
+        print(populations[i])
+
+
+def run_ga(epochs):
+    create_population()
+    for i in range(0, epochs):
+        crossover_outer()
+        mutate()
+        rank_fitness()
+
+
+def init():
+    # Load data
+    X, y = load_waldo_data(nr_data_points)
+    y = np.ndarray.flatten(y)  # Flatten to match dimensions
+    y = y.astype(int)
+    # sort data into classes
+    Xy0 = X[y == 0]
+    Xy1 = X[y == 1]
+    # Done for dtype.
+    X1y0 = fit_distribution(Xy0[:, 0])
+
+    # 6144
+    # One distribution for each colum in X, where y == 0
+    # Distributions for y == 0
+    dist0 = np.empty(Xy0.shape[1], dtype=type(X1y0))
+    for i in range(0, Xy0.shape[1]):
+        dist0[i] = fit_distribution(Xy0[:, i])
+
+    # Distributions for y == 1
+    dist1 = np.empty(Xy1.shape[1], dtype=type(X1y0))
+    for i in range(0, Xy1.shape[1]):
+        dist1[i] = fit_distribution(Xy1[:, i])
+
+    return X, y, dist0, dist1
+    # priory0 = len(Xy0) / len(X)
+    # priory1 = len(Xy1) / len(X)
+
 
 # Apply GA #########################
 # Representation of distributions.
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
-population_count = 2
+population_count = 10
+nr_data_points = 2
+epochs = 10
 populations = []
-# Populations follow this format:
-# 0, index
-# 1 [123, 234, 35345, 342]
-# 2, fitness score
-starting_pop = np.arange(6144)  # Creates ascending numerical array, 0 to N = 6144, which is the number of distributions
 np.random.seed(1337)  # Reproducible results
-
-print('Initialize starting populations:')
-for i in range(0, population_count):
-    np.random.shuffle(starting_pop)
-    tmp = np.copy(starting_pop)
-    populations.append((i, tmp, cumulative_fitness(starting_pop)))
-    print(populations[i])
-
-
-# Crossover populations
-for i in range(0, len(populations), 2):
-    print('Before crossover')
-    print(populations)
-
-    p1 = populations[i][1]  # Values
-    p2 = populations[i + 1][1]
-    c1, c2 = crossover(p1, p2)
-    populations[i] = populations[i][0], c1, populations[i][2]
-    populations[i + 1] = populations[i + i][0], c2, populations[i + i][2]
-    print('After crossover')
-    print(populations)
-
-# Rank fitness scores
-rank_fitness()
-
-# # Crossover #########################
-# print(len(sorted_list))
-# for i in range(0, len(sorted_list) - 1, 2):
-#     print('Crossover loop')
-#     # print('i:', i, ' i + 1: ', i + 1)
-#     pop_index1 = sorted_list[i]
-#     pop_index2 = sorted_list[i + 1]
-#     p1 = populations[pop_index1]
-#     p2 = populations[pop_index2]
-#     c1, c2 = crossover(p1, p2)
-#     # print('C1', c1)
-#     # print('C2', c2)
-#
-#     ## Apply mutation here
-#
-#     populations[pop_index1] = c1
-#     populations[pop_index2] = c2
-# print('Crossover Done')
-#
-# # print('Sorted list:', len(sorted_list))
-# # print('Populations: ', len(populations))
-#
-# sorted_list = list(rank_fitness())
-# for key, value in sorted_list:
-#     print(key, value)
-
-## undersök varför cumulative fitness ger olika beroende på shuffle, ej shuffle
-# kan vara logsumexp?
+X, y, dist0, dist1 = init()
+run_ga(epochs)
