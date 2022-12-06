@@ -1,5 +1,6 @@
 # example of preparing and making a prediction with a naive bayes model
 import collections
+import copy
 import random
 
 import numpy.random
@@ -41,7 +42,7 @@ def load_waldo_data(nr):
 
 
 # Load data
-nr_data_points = 4
+nr_data_points = 2
 X, y = load_waldo_data(nr_data_points)
 y = np.ndarray.flatten(y)  # Flatten to match dimensions
 y = y.astype(int)
@@ -79,10 +80,11 @@ def fit_distribution(data):
 # This probability function uses indexes from GA to find which PDF values we should use.
 # Works identically as the one above, except different indexes.
 # All three parameters have the same shape.
+# Matching sample feature and distribution have to be the same across epochs
 def probability_ga(Xsample, distributions, population):
     log_arr = np.empty(distributions.shape[0])
-    for k in range(0, distributions.shape[0]):
-        log_arr[k] = distributions[population[k]].pdf(Xsample[k])
+    for i in range(0, distributions.shape[0]):
+        log_arr[i] = distributions[population[i]].pdf(Xsample[population[i]])
     return log_arr
 
 
@@ -96,9 +98,9 @@ def calculate_fitness_score(Xsample, ysample, population):
     log_arr0 = probability_ga(Xsample, dist0, population)  # Cumulative probability given not Waldo
     log_arr1 = probability_ga(Xsample, dist1, population)  # CDF probability given not Waldo
 
-    # Note: Possibly remove prior for GA testing
-    py0 = priory0 * logsumexp(log_arr0)
-    py1 = priory1 * logsumexp(log_arr1)
+    # Note: Possibly remove prior for GA testing, Add prior here if need be!
+    py0 = logsumexp(log_arr0)
+    py1 = logsumexp(log_arr1)
 
     # print('P(y=0 | %s) = %.3f' % (Xsample, py0))
     # print('P(y=1 | %s) = %.3f' % (Xsample, py1))
@@ -116,9 +118,8 @@ def rank_fitness():
     print('Rank fitness score:')
     for i in range(0, len(populations)):
         populations[i] = populations[i][0], populations[i][1], cumulative_fitness(populations[i][1])
-
-    print(populations)
     sorted(populations, key=lambda x: x[2])
+    print('Ranked populations:')
     print(populations)
 
 
@@ -161,7 +162,7 @@ priory1 = len(Xy1) / len(X)
 # Representation of distributions.
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
-population_count = 10
+population_count = 2
 populations = []
 # Populations follow this format:
 # 0, index
@@ -172,18 +173,24 @@ np.random.seed(1337)  # Reproducible results
 
 print('Initialize starting populations:')
 for i in range(0, population_count):
-    # np.random.shuffle(starting_pop)
-    populations.append((i, starting_pop, cumulative_fitness(starting_pop)))
+    np.random.shuffle(starting_pop)
+    tmp = np.copy(starting_pop)
+    populations.append((i, tmp, cumulative_fitness(starting_pop)))
     print(populations[i])
 
 
 # Crossover populations
 for i in range(0, len(populations), 2):
-    p1 = populations[i][1]
+    print('Before crossover')
+    print(populations)
+
+    p1 = populations[i][1]  # Values
     p2 = populations[i + 1][1]
     c1, c2 = crossover(p1, p2)
     populations[i] = populations[i][0], c1, populations[i][2]
-    populations[i] = populations[i][0], c2, populations[i][2]
+    populations[i + 1] = populations[i + i][0], c2, populations[i + i][2]
+    print('After crossover')
+    print(populations)
 
 # Rank fitness scores
 rank_fitness()
@@ -213,3 +220,6 @@ rank_fitness()
 # sorted_list = list(rank_fitness())
 # for key, value in sorted_list:
 #     print(key, value)
+
+## undersök varför cumulative fitness ger olika beroende på shuffle, ej shuffle
+# kan vara logsumexp?
