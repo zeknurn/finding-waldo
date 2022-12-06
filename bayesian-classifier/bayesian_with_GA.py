@@ -99,26 +99,22 @@ def calculate_fitness_score(Xsample, ysample, population):
 
 # Calculates fitness for each population, and replaces the previous score obtained from crossover.
 # Then the entire population is sorted, ranked, by fitness score.
-def rank_fitness():
-    print('Rank fitness score:')
+def rank_fitness(populations):
     for i in range(0, len(populations)):
         populations[i] = populations[i][0], populations[i][1], cumulative_fitness(populations[i][1])
-    print('Before ranking:')
-    print(populations)
-    sorted(populations, key=lambda x: x[2])
-    print('Ranked populations:')
-    print(populations)
+    populations = sorted(populations, key=lambda x: x[2], reverse=True)
+    return populations
 
 
 def cumulative_fitness(population):
     tmp = 0
     for j in range(0, nr_data_points):
         tmp += calculate_fitness_score(X[j], y[j], population)
+
     return tmp
 
 
 def crossover_inner(p1, p2):
-    print('Crossover fun')
     split = int(len(p1) / 2)
     c1 = p1[:split]
     c1 = np.append(c1, p2[split:])
@@ -128,35 +124,38 @@ def crossover_inner(p1, p2):
 
 
 # Crossover populations
-def crossover_outer():
-    for i in range(0, len(populations), 2):
-        print('Before crossover')
-        print(populations)
-        p1 = populations[i][1]  # Values
-        p2 = populations[i + 1][1]
-        c1, c2 = crossover_inner(p1, p2)
-        populations[i] = populations[i][0], c1, populations[i][2]
-        populations[i + 1] = populations[i + 1][0], c2, populations[i + 1][2]
-        print('After crossover')
-        print(populations)
+# def crossover_outer(populations):
+#     for i in range(0, len(populations), 2):
+#         p1 = populations[i][1]  # Values
+#         p2 = populations[i + 1][1]
+#         c1, c2 = crossover_inner(p1, p2)
+#         populations[i] = populations[i][0], c1, 0 #populations[i][2]
+#         populations[i + 1] = populations[i + 1][0], c2, 0 # populations[i + 1][2]
+#     return populations
 
+def crossover_outer(populations):
+    step = int(len(populations)/2)
+    for i in range(0, step):
+        print(i, i + step)
+        p1 = populations[i][1]  # Values
+        p2 = populations[i + step][1]
+        c1, c2 = crossover_inner(p1, p2)
+        populations[i] = populations[i][0], c1, 0  # populations[i][2]
+        populations[i + step] = populations[i + step][0], c2, 0  # populations[i + 1][2]
+    return populations
 
 # Apply mutation
 # Selects a population from populations randomly
 # Thereafter select both an index and value which is randomly selected and replaced with a random value within range.
-def mutate():
+def mutate(populations):
     mut_sample_index = np.random.choice(population_count, 10)
     mut_pop_sequence_index = np.random.choice(6144, 10)
     mut_value = np.random.choice(6144, 10)
 
     for index in mut_sample_index:
-        print('Before mutation')
         mutation_sample = populations[index][1]
-        print(sum(mutation_sample))
         mutation_sample[mut_pop_sequence_index] = mut_value[random.randint(0, 9)]
-        print('After mutation')
-        print(sum(mutation_sample))
-
+    return populations
 
 # Creates ascending numerical array, 0 to N = 6144, which is the number of distributions
 # Populations follow this format:
@@ -164,21 +163,33 @@ def mutate():
 # 1 [123, 234, 35345, 342]
 # 2, fitness score
 def create_population():
+    populations = []
     starting_pop = np.arange(6144)
-    print('Initialize starting populations:')
     for i in range(0, population_count):
         np.random.shuffle(starting_pop)
         tmp = np.copy(starting_pop)
         populations.append((i, tmp, cumulative_fitness(starting_pop)))
-        print(populations[i])
-
+    return populations
 
 def run_ga(epochs):
-    create_population()
+    print('Creating starting population')
+    populations = create_population()
     for i in range(0, epochs):
-        crossover_outer()
-        mutate()
-        rank_fitness()
+        print('Epoch: ', i, ':')
+        # print('Population: ', populations)
+        print('Starting crossover - Epoch: ', i)
+        populations = crossover_outer(populations)
+        print('Crossover done - Epoch: ', i)
+        # print(populations)
+        print('Starting mutation - Epoch: ', i)
+        populations = mutate(populations)
+        print('Mutation done - Epoch: ', i)
+        # print(populations)
+        print('Starting rank fitness - Epoch: ', i)
+
+        populations = rank_fitness(populations)
+        print('Rank fitness done - Epoch: ', i)
+        print(populations)
 
 
 def init():
@@ -216,7 +227,7 @@ def init():
 population_count = 10
 nr_data_points = 2
 epochs = 10
-populations = []
+
 np.random.seed(1337)  # Reproducible results
 X, y, dist0, dist1 = init()
 run_ga(epochs)

@@ -33,7 +33,7 @@ def load_waldo_data(nr):
     return x, y
 
 
-nr_data_points = 2
+nr_data_points = 1000
 # Load data
 # X_example, y_example = make_blobs(n_samples=50, centers=2, n_features=2, random_state=1)
 X, y = load_waldo_data(nr_data_points)
@@ -65,8 +65,10 @@ def fit_distribution(data):
     return dist
 
 
-def probability(X, prior, dist1, dist2):
-    return prior * dist1.pdf(X[0]) * dist2.pdf(X[1])
+# def probability(X, prior, dist1, dist2):
+#     return prior * dist1.pdf(X[0]) * dist2.pdf(X[1])
+
+
 # If underflow possible, convert multiplication to log.
 # def probability(X, prior, distributions):
 #     # prior = 1
@@ -84,7 +86,7 @@ def probability(X, prior, dist1, dist2):
 # Since values can range from -2 sigma, +2 sigma, probability values either over-, or underflow.
 # We use the log-sum trick to normalize values
 # P(x1 | W) * P(x2 | W)...
-def probability(X, prior, distributions):
+def probability(X, distributions):
     log_arr = np.empty(distributions.shape[0])
     for j in range(0, distributions.shape[0]):
         log_arr[j] = distributions[j].pdf(X[j])
@@ -99,7 +101,6 @@ def logsumexp(x):
 # Loop, rad N. 6144
 # Create PDFs for y == 0
 start_time = time.time()
-
 X1y0 = fit_distribution(Xy0[:, 0])
 # X2y0 = fit_distribution(Xy0[:, 1])
 
@@ -127,15 +128,18 @@ for i in range(nr_data_points):
     Xsample, ysample = X[i], y[i]  # en rad
     # py0 = probability(Xsample, priory0, X1y0, X2y0) # given not Waldo
     # py1 = probability(Xsample, priory1, X1y1, X2y1) # given Waldo
-    log_arr0 = probability(Xsample, priory0, dist0)  # Cumulative probability given not Waldo
-    log_arr1 = probability(Xsample, priory1, dist1)  # CDF probability given not Waldo
+    log_arr0 = probability(Xsample, dist0)  # Cumulative probability given not Waldo
+    log_arr1 = probability(Xsample, dist1)  # CDF probability given not Waldo
 
     # Test
+    # priory0
+    # priory1
     py0 = priory0 * logsumexp(log_arr0)
     py1 = priory1 * logsumexp(log_arr1)
 
-    print('P(y=0 | %s) = %.3f' % (Xsample, py0 * 100))
-    print('P(y=1 | %s) = %.3f' % (Xsample, py1 * 100))
+    print('Data point: ', i)
+    print('P(y=0 | %s)' % py0)
+    print('P(y=1 | %s)' % py1)
     if py0 > py1 and y[i] == 0:
         score += 1
     elif py1 > py0 and y[i] == 1:
