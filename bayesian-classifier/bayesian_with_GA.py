@@ -55,11 +55,11 @@ def fit_distribution(data):
 # Since values can range from -2 sigma, +2 sigma, probability values either over-, or underflow.
 # We use the log-sum trick to normalize values
 # P(x1 | W) * P(x2 | W)...
-# def probability(X, prior, distributions):
-#     log_arr = np.empty(distributions.shape[0])
-#     for j in range(0, distributions.shape[0]):
-#         log_arr[j] = distributions[j].pdf(X[j])
-#     return log_arr
+def probability(X, prior, distributions):
+    log_arr = np.empty(distributions.shape[0])
+    for j in range(0, distributions.shape[0]):
+        log_arr[j] = distributions[j].pdf(X[j])
+    return log_arr
 
 
 # This probability function uses indexes from GA to find which PDF values we should use.
@@ -134,7 +134,7 @@ def crossover_inner(p1, p2):
 #     return populations
 
 def crossover_outer(populations):
-    step = int(len(populations)/2)
+    step = int(len(populations) / 2)
     for i in range(0, step):
         print(i, i + step)
         p1 = populations[i][1]  # Values
@@ -143,6 +143,7 @@ def crossover_outer(populations):
         populations[i] = populations[i][0], c1, 0  # populations[i][2]
         populations[i + step] = populations[i + step][0], c2, 0  # populations[i + 1][2]
     return populations
+
 
 # Apply mutation
 # Selects a population from populations randomly
@@ -157,6 +158,7 @@ def mutate(populations):
         mutation_sample[mut_pop_sequence_index] = mut_value[random.randint(0, 9)]
     return populations
 
+
 # Creates ascending numerical array, 0 to N = 6144, which is the number of distributions
 # Populations follow this format:
 # 0, index
@@ -170,6 +172,7 @@ def create_population():
         tmp = np.copy(starting_pop)
         populations.append((i, tmp, cumulative_fitness(starting_pop)))
     return populations
+
 
 def run_ga(epochs):
     print('Creating starting population')
@@ -190,6 +193,7 @@ def run_ga(epochs):
         populations = rank_fitness(populations)
         print('Rank fitness done - Epoch: ', i)
         print(populations)
+    return populations
 
 
 def init():
@@ -226,8 +230,10 @@ def init():
 # The GA works by finding a combination of PDFs that yield the highest score.
 population_count = 10
 nr_data_points = 2
-epochs = 10
+epochs = 1
 
 np.random.seed(1337)  # Reproducible results
 X, y, dist0, dist1 = init()
-run_ga(epochs)
+best_fit_population = run_ga(epochs)
+# np.savetxt('ga_out_new.csv', best_fit_population, delimiter=',')
+print(best_fit_population[0][1])
