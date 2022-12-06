@@ -279,12 +279,12 @@ class Network:
         #print("_________________")
         #print("w1 grad:", self.w1_gradient)
         #print("w2 grad:", self.w2_gradient)
-        self.w2 = self.w2 - learning_rate * (self.w2_gradient / learning_count)
-        self.w1 = self.w1 - learning_rate * (self.w1_gradient / learning_count)
+        np.copyto(self.w2, self.w2 - learning_rate * (self.w2_gradient / learning_count))
+        np.copyto(self.w1, self.w1 - learning_rate * (self.w1_gradient / learning_count))
 
         #biases
-        self.b2 = self.b2 - learning_rate * (self.b2_gradients / learning_count)
-        self.b1 = self.b1 - learning_rate * (self.b1_gradients / learning_count)
+        np.copyto(self.b2, self.b2 - learning_rate * (self.b2_gradients / learning_count))
+        np.copyto(self.b1, self.b1 - learning_rate * (self.b1_gradients / learning_count))
 
     def reset_gradients(self):
         self.w1_gradient = np.zeros(shape=(input_layer_size, hidden_layer_size))
