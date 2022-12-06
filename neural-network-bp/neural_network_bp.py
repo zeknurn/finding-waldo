@@ -158,11 +158,6 @@ class Network:
         # populate the input layer with the data_point
         self.a0 = x
 
-        # print("a1.shape: ", self.a1.shape,
-        #      " a0.shape: ", self.a0.shape, 
-        #      " w1.shape: ", self.w1.shape, 
-        #      " b1.shape: ", self.b1.shape)
-
         # feed forward the input
         relu_v = np.vectorize(lambda x: self.relu(x))
         self.z1 = np.matmul(self.a0, self.w1) + self.b1
@@ -182,14 +177,14 @@ class Network:
         Z2 = np.dot(self.a1, self.w2)
         self.a2 = relu_v(Z2)
 
-        vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
+        d_relu_v = np.vectorize(lambda x: self.d_relu(x))
 
         # Backpropagation phase
         E1 = self.a2 - y
-        dW1 = E1 * self.a2 * vectorized_d_relu(self.a2)
+        dW1 = E1 * self.a2 * d_relu_v(self.a2)
  
         E2 = np.dot(dW1, self.w2.T)
-        dW2 = E2 * self.a1 * vectorized_d_relu(self.a1)
+        dW2 = E2 * self.a1 * d_relu_v(self.a1)
  
         # Updating the weights
         W2_update = np.dot(self.a1.T, dW1) / y.size
@@ -200,15 +195,15 @@ class Network:
 
     def backpropagation(self, y):
 
-        vectorized_d_relu = np.vectorize(lambda x: self.d_relu(x))
+        d_relu_v = np.vectorize(lambda x: self.d_relu(x))
 
         # Partial derivatives - output layer
         dc_a2 = (self.a2 - y) * 2
-        da2_z2 = vectorized_d_relu(self.z2)
+        da2_z2 = d_relu_v(self.z2)
         dz2_w2 = self.a1
         # Partial derivatives - hidden layer
         dz2_a1 = self.w2
-        da1_z1 = vectorized_d_relu(self.z1)
+        da1_z1 = d_relu_v(self.z1)
         dz1_w1 = self.a0
 
         # Matrix multiplication - Cost with respect to weights - output layer
@@ -293,8 +288,10 @@ class Network:
         self.b2_gradients = np.zeros(shape=self.b2.shape)
 
     def learn(self, x, y, batch_size):
+        print("training network")
+
         # Set how many iterations you want to run this training for
-        epochs = 5
+        epochs = 10
 
         batch_count = int(x.shape[0] / batch_size)
 
@@ -342,7 +339,7 @@ print('y.shape:', y_train.shape)
 
 input_layer_size = x_train.shape[1]
 hidden_layer_count = 1
-hidden_layer_size = 32
+hidden_layer_size = 3
 output_layer_size = y_train.shape[1]
 batch_size = 1 # needs to be evenly divideable by training size atm
 
