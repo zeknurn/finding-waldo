@@ -12,6 +12,7 @@
     <OutputPath>.</OutputPath>
     <Name>neural-network-bp</Name>
     <RootNamespace>finding-waldo</RootNamespace>
+    <TestFramework>Pytest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
