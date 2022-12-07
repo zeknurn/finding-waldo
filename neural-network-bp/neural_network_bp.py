@@ -257,9 +257,9 @@ class Network:
             # feed forward the batch
             self.feed_forward(x_batch[j])
             print("classification:\n", self.a2, "\nlabels:\n", y_batch[j])
-            self.accuracy(self.a2, y_batch[j])
+            self.calculate_accuracy(self.a2, y_batch[j])
 
-    def accuracy(self, y_pred, y_true):
+    def calculate_accuracy(self, y_pred, y_true):
         self.true_positive += (y_pred.argmax(axis=1) == 0 and (y_pred.argmax(axis=1) == y_true.argmax(axis=1))).mean() 
         self.true_negative += (y_pred.argmax(axis=1) == 1 and (y_pred.argmax(axis=1) == y_true.argmax(axis=1))).mean()
         self.false_positive += (y_pred.argmax(axis=1) == 0 and (y_pred.argmax(axis=1) != y_true.argmax(axis=1))).mean()
