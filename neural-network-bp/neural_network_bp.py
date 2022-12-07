@@ -381,5 +381,5 @@ for i in range(2, max_hidden_layer_size, hidden_layer_step_size):
     NN = Network(input_layer_size, hidden_layer_count, i, output_layer_size, batch_size)
     CSV_Handler.load_bias_weights(NN)
     NN.learn(x_train, y_train, batch_size, learning_rate, epochs)
+    NN.classify(x_test, y_test, batch_size)
 
-NN.classify(x_test, y_test, batch_size)
