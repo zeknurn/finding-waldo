@@ -277,7 +277,7 @@ class Network:
         if test_notwaldo_count == 0:
             test_notwaldo_count = 1
 
-        print("Neural Network with", hidden_layer_size, "hidden layer neurons")
+        print("Neural Network with", self.a1.size, "hidden layer neurons")
         print("total accuracy: ", (NN.accuracy / classification_count * 100, "%"))
         print("true_positive: ", (NN.true_positive / test_waldo_count * 100, "%"))
         print("true_negative: ", (NN.true_negative / test_notwaldo_count * 100, "%"))
@@ -370,8 +370,8 @@ input_layer_size = x_train.shape[1]
 hidden_layer_count = 1
 output_layer_size = y_train.shape[1]
 batch_size = 1 # needs to be evenly divideable by training size
-learning_rate = 0.01 # Set your learning rate. 0.1 is a good starting point
-epochs = 50 # Set how many iterations you want to run the training for
+learning_rate = 0.1 # Set your learning rate. 0.1 is a good starting point
+epochs = 20 # Set how many iterations you want to run the training for
 
 max_hidden_layer_size = 32
 hidden_layer_step_size = 4
