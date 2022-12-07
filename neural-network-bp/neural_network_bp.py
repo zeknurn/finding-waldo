@@ -153,6 +153,10 @@ class Network:
         self.z2 = np.zeros(output_layer_size)
 
         self.accuracy_sum = 0
+        self.true_negative = 0
+        self.true_positive = 0
+        self.false_positive = 0
+        self.false_negative = 0
 
     def feed_forward(self, x):
         # populate the input layer with the data_point
@@ -256,6 +260,11 @@ class Network:
             self.accuracy(self.a2, y_batch[j])
 
     def accuracy(self, y_pred, y_true):
+        self.true_positive += (y_pred.argmax(axis=1) == 0 and (y_pred.argmax(axis=1) == y_true.argmax(axis=1))).mean() 
+        self.true_negative += (y_pred.argmax(axis=1) == 1 and (y_pred.argmax(axis=1) == y_true.argmax(axis=1))).mean()
+        self.false_positive += (y_pred.argmax(axis=1) == 0 and (y_pred.argmax(axis=1) != y_true.argmax(axis=1))).mean()
+        self.false_negative += (y_pred.argmax(axis=1) == 1 and (y_pred.argmax(axis=1) != y_true.argmax(axis=1))).mean()
+
         self.accuracy_sum += (y_pred.argmax(axis=1) == y_true.argmax(axis=1)).mean()
         
     def cost(self, output, expected_output):
@@ -352,8 +361,23 @@ CSV_Handler.load_bias_weights(NN)
 
 NN.classify(x_test, y_test, batch_size)
 classification_count = int(x_test.shape[0] / batch_size)
+test_waldo_count = np.count_nonzero(y_test[:,1] == 0)
+test_notwaldo_count = np.count_nonzero(y_test[:,1] == 1)
 
 #NN.classify(x_waldo, y_waldo, batch_size)
 #classification_count = int(x_waldo.shape[0] / batch_size)
+#test_waldo_count = np.count_nonzero(y_waldo[:,1] == 0)
+#test_notwaldo_count = np.count_nonzero(y_waldo[:,1] == 1)
 
-print("accuracy: ", (NN.accuracy_sum / classification_count * 100, "%"))
+# prevent division by zero when using lopsided testing samples.
+if test_waldo_count == 0:
+    test_waldo_count = 1
+
+if test_notwaldo_count == 0:
+    test_notwaldo_count = 1
+
+print("total accuracy: ", (NN.accuracy_sum / classification_count * 100, "%"))
+print("true_positive : ", (NN.true_positive / test_waldo_count * 100, "%"))
+print("true_negative : ", (NN.true_negative / test_notwaldo_count * 100, "%"))
+print("false_positive : ", (NN.false_positive / test_notwaldo_count * 100, "%"))
+print("false_negative : ", (NN.false_negative / test_waldo_count * 100, "%"))
