@@ -138,8 +138,8 @@ def classify():
         log_arr1 = probability(Xsample, dist1)  # CDF probability given not Waldo
 
         # Test
-        py0 = logsumexp(log_arr0) #* priory0
-        py1 = logsumexp(log_arr1) #* priory1
+        py0 = logsumexp(log_arr0) * priory0
+        py1 = logsumexp(log_arr1) * priory1
 
         print('Data point: ', i)
         print('P(y=0 | %s)' % py0)
@@ -175,7 +175,7 @@ def classify():
     print("false_negative: ", (false_negative / test_waldo_count * 100, "%"))
 
 
-nr_data_points = 3000
+nr_data_points = 10
 start_time = time.time()
 
 X, y, dist0, dist1, priory0, priory1 = init()

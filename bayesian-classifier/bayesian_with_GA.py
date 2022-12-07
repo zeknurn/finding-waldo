@@ -259,8 +259,8 @@ def classify():
         log_arr1 = probability_ga(Xsample, dist1, best_population)  # CDF probability given not Waldo
 
         # Test
-        py0 = logsumexp(log_arr0) # * priory0
-        py1 = logsumexp(log_arr1) # * priory1
+        py0 = logsumexp(log_arr0) * priory0
+        py1 = logsumexp(log_arr1) * priory1
 
         print('Data point: ', i)
         print('P(y=0 | %s)' % py0)
@@ -301,7 +301,7 @@ def classify():
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
 population_count = 100
-nr_data_points = 78
+nr_data_points = 10
 epochs = 100
 start_time = time.time()
 
