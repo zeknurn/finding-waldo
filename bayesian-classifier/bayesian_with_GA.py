@@ -247,7 +247,11 @@ def classify():
     #Load best population
     best_population = np.loadtxt('ga_best_population.csv', delimiter=',').astype(np.int64)
 
-    score = 0
+    accuracy = 0
+    true_positive = 0
+    true_negative = 0
+    false_positive = 0
+    false_negative = 0
 
     for i in range(nr_data_points):
         Xsample, ysample = X[i], y[i]  # en rad
@@ -262,12 +266,27 @@ def classify():
         print('P(y=0 | %s)' % py0)
         print('P(y=1 | %s)' % py1)
         if py0 > py1 and y[i] == 0:
-            score += 1
+            accuracy += 1
         elif py1 > py0 and y[i] == 1:
-            score += 1
+            accuracy += 1
         print('Truth: y=%d' % ysample)
 
-    print("With GA, score: ", score / nr_data_points * 100, "%, number of data points: ", nr_data_points)
+        test_waldo_count = np.count_nonzero(y[:] == 0)
+    test_notwaldo_count = np.count_nonzero(y[:] == 1)
+
+    # prevent division by zero when using lopsided testing samples.
+    if test_waldo_count == 0:
+        test_waldo_count = 1
+
+    if test_notwaldo_count == 0:
+        test_notwaldo_count = 1
+
+    print("Bayesian classifier WITH GA")
+    print("total accuracy: ", (accuracy / nr_data_points * 100, "%"))
+    print("true_positive: ", (true_positive / test_waldo_count * 100, "%"))
+    print("true_negative: ", (true_negative / test_notwaldo_count * 100, "%"))
+    print("false_positive: ", (false_positive / test_notwaldo_count * 100, "%"))
+    print("false_negative: ", (false_negative / test_waldo_count * 100, "%"))
 
 
 # Apply GA #########################
@@ -275,7 +294,7 @@ def classify():
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
 population_count = 100
-nr_data_points = 2
+nr_data_points = 78
 epochs = 100
 start_time = time.time()
 

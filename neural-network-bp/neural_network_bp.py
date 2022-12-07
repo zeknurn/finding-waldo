@@ -152,7 +152,7 @@ class Network:
         self.z1 = np.zeros(hidden_layer_size)
         self.z2 = np.zeros(output_layer_size)
 
-        self.accuracy_sum = 0
+        self.accuracy = 0
         self.true_negative = 0
         self.true_positive = 0
         self.false_positive = 0
@@ -265,7 +265,7 @@ class Network:
         self.false_positive += (y_pred.argmax(axis=1) == 0 and (y_pred.argmax(axis=1) != y_true.argmax(axis=1))).mean()
         self.false_negative += (y_pred.argmax(axis=1) == 1 and (y_pred.argmax(axis=1) != y_true.argmax(axis=1))).mean()
 
-        self.accuracy_sum += (y_pred.argmax(axis=1) == y_true.argmax(axis=1)).mean()
+        self.accuracy += (y_pred.argmax(axis=1) == y_true.argmax(axis=1)).mean()
         
     def cost(self, output, expected_output):
         error = output - expected_output
@@ -376,8 +376,8 @@ if test_waldo_count == 0:
 if test_notwaldo_count == 0:
     test_notwaldo_count = 1
 
-print("total accuracy: ", (NN.accuracy_sum / classification_count * 100, "%"))
-print("true_positive : ", (NN.true_positive / test_waldo_count * 100, "%"))
-print("true_negative : ", (NN.true_negative / test_notwaldo_count * 100, "%"))
-print("false_positive : ", (NN.false_positive / test_notwaldo_count * 100, "%"))
-print("false_negative : ", (NN.false_negative / test_waldo_count * 100, "%"))
+print("total accuracy: ", (NN.accuracy / classification_count * 100, "%"))
+print("true_positive: ", (NN.true_positive / test_waldo_count * 100, "%"))
+print("true_negative: ", (NN.true_negative / test_notwaldo_count * 100, "%"))
+print("false_positive: ", (NN.false_positive / test_notwaldo_count * 100, "%"))
+print("false_negative: ", (NN.false_negative / test_waldo_count * 100, "%"))
