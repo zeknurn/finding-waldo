@@ -5,30 +5,33 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
 class CSV_Handler:
+
     def save_bias_weights(network):
         print("saving bias and weights")
 
         for i in range(len(network.biases)):
-            np.savetxt("b{}.csv".format(i+1), network.biases[i], delimiter=",")
+            np.savetxt("b{}_hln{}.csv".format(i+1, network.a1.size), network.biases[i], delimiter=",")
 
         for i in range(len(network.weights)):
-            np.savetxt("w{}.csv".format(i+1), network.weights[i], delimiter=",")
+            np.savetxt("w{}_hln{}.csv".format(i+1, network.a1.size), network.weights[i], delimiter=",")
 
     def load_bias_weights(network):
         print("loading bias and weights")
 
         for i in range(len(network.biases)):
-            filename = "b{}.csv".format(i+1)
+            filename = "b{}_hln{}.csv".format(i+1, network.a1.size)
             if os.path.exists(filename):
                 bias = np.loadtxt(filename, delimiter=",", ndmin=2)
                 if bias.shape == network.biases[i].shape:
+                    print("valid saved bias exists: ", filename)
                     np.copyto(network.biases[i], bias)
 
         for i in range(len(network.weights)):
-            filename = "w{}.csv".format(i+1)
+            filename = "w{}_hln{}.csv".format(i+1, network.a1.size)
             if os.path.exists(filename):
-                weight = np.loadtxt("w{}.csv".format(i+1), delimiter=",", ndmin=2)
+                weight = np.loadtxt(filename, delimiter=",", ndmin=2)
                 if weight.shape == network.weights[i].shape:
+                    print("valid saved weights exists: ", filename)
                     np.copyto(network.weights[i], weight)
 
 def load_waldo_data(training_size_percent, testing_size_percent):
@@ -142,12 +145,11 @@ class Network:
         self.biases = [self.b1, self.b2]
 
         # Gradients
-        self.w1_gradient = np.zeros(shape=(input_layer_size, hidden_layer_size))
-        self.w2_gradient = np.zeros(shape=(hidden_layer_size, output_layer_size))
+        self.w1_gradient = np.zeros(shape=self.w1.shape)
+        self.w2_gradient = np.zeros(shape=self.w2.shape)
         self.b1_gradients = np.zeros(shape=self.b1.shape)
         self.b2_gradients = np.zeros(shape=self.b2.shape)
-        self.layer_count = 3
-
+ 
         # Z, sum of weighted activation + bias.
         self.z1 = np.zeros(hidden_layer_size)
         self.z2 = np.zeros(output_layer_size)
@@ -256,8 +258,32 @@ class Network:
         for j in range(0, len(x_batch)):
             # feed forward the batch
             self.feed_forward(x_batch[j])
-            print("classification:\n", self.a2, "\nlabels:\n", y_batch[j])
+            #print("classification:\n", self.a2, "\nlabels:\n", y_batch[j])
             self.calculate_accuracy(self.a2, y_batch[j])
+
+        classification_count = int(x_test.shape[0] / batch_size)
+        test_waldo_count = np.count_nonzero(y_test[:,1] == 0)
+        test_notwaldo_count = np.count_nonzero(y_test[:,1] == 1)
+
+        #NN.classify(x_waldo, y_waldo, batch_size)
+        #classification_count = int(x_waldo.shape[0] / batch_size)
+        #test_waldo_count = np.count_nonzero(y_waldo[:,1] == 0)
+        #test_notwaldo_count = np.count_nonzero(y_waldo[:,1] == 1)
+
+        # prevent division by zero when using lopsided testing samples.
+        if test_waldo_count == 0:
+            test_waldo_count = 1
+
+        if test_notwaldo_count == 0:
+            test_notwaldo_count = 1
+
+        print("Neural Network with", hidden_layer_size, "hidden layer neurons")
+        print("total accuracy: ", (NN.accuracy / classification_count * 100, "%"))
+        print("true_positive: ", (NN.true_positive / test_waldo_count * 100, "%"))
+        print("true_negative: ", (NN.true_negative / test_notwaldo_count * 100, "%"))
+        print("false_positive: ", (NN.false_positive / test_notwaldo_count * 100, "%"))
+        print("false_negative: ", (NN.false_negative / test_waldo_count * 100, "%"))
+
 
     def calculate_accuracy(self, y_pred, y_true):
         self.true_positive += (y_pred.argmax(axis=1) == 0 and (y_pred.argmax(axis=1) == y_true.argmax(axis=1))).mean() 
@@ -292,21 +318,14 @@ class Network:
         np.copyto(self.b1, self.b1 - learning_rate * (self.b1_gradients / learning_count))
 
     def reset_gradients(self):
-        self.w1_gradient = np.zeros(shape=(input_layer_size, hidden_layer_size))
-        self.w2_gradient = np.zeros(shape=(hidden_layer_size, output_layer_size))
+        self.w1_gradient = np.zeros(shape=self.w1.shape)
+        self.w2_gradient = np.zeros(shape=self.w2.shape)
         self.b1_gradients = np.zeros(shape=self.b1.shape)
         self.b2_gradients = np.zeros(shape=self.b2.shape)
 
-    def learn(self, x, y, batch_size):
+    def learn(self, x, y, batch_size, learning_rate, epochs):
         print("training network")
-
-        # Set how many iterations you want to run this training for
-        epochs = 100
-
         batch_count = int(x.shape[0] / batch_size)
-
-        # Set your learning rate. 0.1 is a good starting point
-        learning_rate = 0.001
 
         for i in range(0, epochs):
 
@@ -344,40 +363,23 @@ x_train, x_test, x_valid, y_train, y_test, y_valid, x_waldo, y_waldo = load_wald
 #x_test = x_train
 #y_test = y_train
 
-print('X.shape:', x_train.shape)
-print('y.shape:', y_train.shape)
+print('x_train.shape:', x_train.shape)
+print('y_train.shape:', y_train.shape)
 
 input_layer_size = x_train.shape[1]
 hidden_layer_count = 1
-hidden_layer_size = 3
 output_layer_size = y_train.shape[1]
-batch_size = 1 # needs to be evenly divideable by training size atm
+batch_size = 1 # needs to be evenly divideable by training size
+learning_rate = 0.01 # Set your learning rate. 0.1 is a good starting point
+epochs = 50 # Set how many iterations you want to run the training for
 
-NN = Network(input_layer_size, hidden_layer_count, hidden_layer_size, output_layer_size, batch_size)
+max_hidden_layer_size = 32
+hidden_layer_step_size = 4
 
-CSV_Handler.load_bias_weights(NN)
-
-#NN.learn(x_train, y_train, batch_size)
+for i in range(2, max_hidden_layer_size, hidden_layer_step_size):
+    print("Creating new network, hidden layer size:", i)
+    NN = Network(input_layer_size, hidden_layer_count, i, output_layer_size, batch_size)
+    CSV_Handler.load_bias_weights(NN)
+    NN.learn(x_train, y_train, batch_size, learning_rate, epochs)
 
 NN.classify(x_test, y_test, batch_size)
-classification_count = int(x_test.shape[0] / batch_size)
-test_waldo_count = np.count_nonzero(y_test[:,1] == 0)
-test_notwaldo_count = np.count_nonzero(y_test[:,1] == 1)
-
-#NN.classify(x_waldo, y_waldo, batch_size)
-#classification_count = int(x_waldo.shape[0] / batch_size)
-#test_waldo_count = np.count_nonzero(y_waldo[:,1] == 0)
-#test_notwaldo_count = np.count_nonzero(y_waldo[:,1] == 1)
-
-# prevent division by zero when using lopsided testing samples.
-if test_waldo_count == 0:
-    test_waldo_count = 1
-
-if test_notwaldo_count == 0:
-    test_notwaldo_count = 1
-
-print("total accuracy: ", (NN.accuracy / classification_count * 100, "%"))
-print("true_positive: ", (NN.true_positive / test_waldo_count * 100, "%"))
-print("true_negative: ", (NN.true_negative / test_notwaldo_count * 100, "%"))
-print("false_positive: ", (NN.false_positive / test_notwaldo_count * 100, "%"))
-print("false_negative: ", (NN.false_negative / test_waldo_count * 100, "%"))
