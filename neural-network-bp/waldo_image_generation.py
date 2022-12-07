@@ -38,5 +38,3 @@ background_images = get_image_paths(notwaldo_path)
 for i in range(len(background_images)):
     waldo_overlay_path = random.choice(waldo_overlay_paths)
     overlay_image(background_images[i], waldo_overlay_path, i)
-    if i == 10:
-        break

@@ -15,14 +15,14 @@ import time
 # Function to load in the dataset, uses PCA values obtained previously.
 # Returns X, y, which is the PCA values of the image, and the corresponding true value for that image.
 # 1 is Waldo, 0 is not Waldo.
-def load_waldo_data(nr):
+def load_waldo_data(sample_size):
     print("loading data")
     # Read data file and label images with Waldo as 1, and not Waldo as 0.
     with open('features_waldo.csv', 'r') as f:
-        x = np.loadtxt(f, delimiter=',', max_rows=nr)
+        x = np.loadtxt(f, delimiter=',',)
         y = np.ones(shape=(x.shape[0], 1))
     with open('features_notwaldo.csv', 'r') as t:
-        x_2 = np.loadtxt(t, delimiter=',', max_rows=nr)
+        x_2 = np.loadtxt(t, delimiter=',',)
         y_2 = np.zeros(shape=(x_2.shape[0], 1))
     x = np.append(x, x_2, axis=0)
     y = np.append(y, y_2, axis=0)
@@ -38,7 +38,7 @@ def load_waldo_data(nr):
     x = x[randomize]
     y = y[randomize]
     print('done')
-    return x, y
+    return x[:sample_size], y[:sample_size]
 
 
 # This function fits each and every single variable in a column to a normal distribution.
@@ -221,7 +221,7 @@ def init():
     Xy0 = X[y == 0]
     Xy1 = X[y == 1]
     print('Sort data into classes')
-    print(Xy0.shape, Xy1.shape)
+    print("Not Waldo: ", Xy0.shape, "Waldo: ", Xy1.shape)
     # Done for dtype.
     X1y0 = fit_distribution(Xy0[:, 0])
 
@@ -267,12 +267,19 @@ def classify():
         print('P(y=1 | %s)' % py1)
         if py0 > py1 and y[i] == 0:
             accuracy += 1
+            true_negative +=1
+        elif py1 < py0 and y[i] == 1:
+            false_negative += 1
         elif py1 > py0 and y[i] == 1:
             accuracy += 1
+            true_positive += 1
+        elif py1 > py0 and y[i] == 0:
+            false_positive += 1
+
         print('Truth: y=%d' % ysample)
 
-        test_waldo_count = np.count_nonzero(y[:] == 0)
-    test_notwaldo_count = np.count_nonzero(y[:] == 1)
+    test_waldo_count = np.count_nonzero(y[:] == 1)
+    test_notwaldo_count = np.count_nonzero(y[:] == 0)
 
     # prevent division by zero when using lopsided testing samples.
     if test_waldo_count == 0:
@@ -300,7 +307,7 @@ start_time = time.time()
 
 np.random.seed(1337)  # Reproducible results
 X, y, dist0, dist1, priory0, priory1 = init()
-run_ga(epochs)
+#run_ga(epochs)
 
 classify()
 print("--- %s seconds ---" % (time.time() - start_time))

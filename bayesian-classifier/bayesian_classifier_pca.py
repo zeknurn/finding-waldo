@@ -7,14 +7,14 @@ from numpy import std
 import time
 
 
-def load_waldo_data(nr):
+def load_waldo_data(sample_size):
     print("loading data")
     # Read data file and label images with Waldo as 1, and not Waldo as 0.
     with open('features_waldo.csv', 'r') as f:
-        x = np.loadtxt(f, delimiter=',', max_rows=nr)
+        x = np.loadtxt(f, delimiter=',')
         y = np.ones(shape=(x.shape[0], 1))
     with open('features_notwaldo.csv', 'r') as t:
-        x_2 = np.loadtxt(t, delimiter=',', max_rows=nr)
+        x_2 = np.loadtxt(t, delimiter=',')
         y_2 = np.zeros(shape=(x_2.shape[0], 1))
     x = np.append(x, x_2, axis=0)
     y = np.append(y, y_2, axis=0)
@@ -30,7 +30,7 @@ def load_waldo_data(nr):
     x = x[randomize]
     y = y[randomize]
     print('done')
-    return x, y
+    return x[:sample_size], y[:sample_size]
 
 
 # This function fits each and every single variable in a column to a normal distribution.
@@ -95,7 +95,7 @@ def init():
     Xy0 = X[y == 0]
     Xy1 = X[y == 1]
     print('Sort data into classes')
-    print(Xy0.shape, Xy1.shape)
+    print("Not Waldo: ", Xy0.shape, "Waldo: ", Xy1.shape)
 
     # Loop, rad N. 6144
     # Create PDFs for y == 0
@@ -157,8 +157,8 @@ def classify():
 
         print('Truth: y=%d' % ysample)
 
-    test_waldo_count = np.count_nonzero(y[:] == 0)
-    test_notwaldo_count = np.count_nonzero(y[:] == 1)
+    test_waldo_count = np.count_nonzero(y[:] == 1)
+    test_notwaldo_count = np.count_nonzero(y[:] == 0)
 
     # prevent division by zero when using lopsided testing samples.
     if test_waldo_count == 0:
@@ -175,7 +175,7 @@ def classify():
     print("false_negative: ", (false_negative / test_waldo_count * 100, "%"))
 
 
-nr_data_points = 2
+nr_data_points = 3000
 start_time = time.time()
 
 X, y, dist0, dist1, priory0, priory1 = init()
