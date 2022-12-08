@@ -30,7 +30,7 @@ def load_waldo_data(sample_size):
     x = x[randomize]
     y = y[randomize]
     print('done')
-    return x[:sample_size], y[:sample_size]
+    return x[:sample_size], y[:sample_size], x, y
 
 
 # This function fits each and every single variable in a column to a normal distribution.
@@ -78,22 +78,27 @@ def logsumexp(x):
 def init():
     # Load data
     # X_example, y_example = make_blobs(n_samples=50, centers=2, n_features=2, random_state=1)
-    X, y = load_waldo_data(nr_data_points)
-    y = np.ndarray.flatten(y)
-    y = y.astype(int)
+    X_sample, y_sample, X_all, y_all = load_waldo_data(nr_data_points)
+
+    y_sample = np.ndarray.flatten(y_sample)
+    y_sample = y_sample.astype(int)
+
+    y_all = np.ndarray.flatten(y_all)
+    y_all = y_all.astype(int)
+
     # print('Waldo shape X: ', X.shape, '/// Example shape X: ', X_example.shape)
     # print('Waldo shape y: ', y.shape, '/// Example shape y: ', y_example.shape)
     print('Waldo dataset:')
-    print('Waldo shape X:', X.shape)
-    print('Waldo shape y:', y.shape)
+    print('Waldo shape X:', X_sample.shape)
+    print('Waldo shape y:', y_sample.shape)
 
     # print(X[:2], y[:2])
     # print('Blobs dataset:')
     # print(X_example[:2], y_example[:2])
 
     # # sort data into classes
-    Xy0 = X[y == 0]
-    Xy1 = X[y == 1]
+    Xy0 = X_all[y_all == 0]
+    Xy1 = X_all[y_all == 1]
     print('Sort data into classes')
     print("Not Waldo: ", Xy0.shape, "Waldo: ", Xy1.shape)
 
@@ -117,10 +122,10 @@ def init():
     for i in range(0, Xy1.shape[1]):
         dist1[i] = fit_distribution(Xy1[:, i])
 
-    priory0 = len(Xy0) / len(X)
-    priory1 = len(Xy1) / len(X)
+    priory0 = len(Xy0) / len(X_all)
+    priory1 = len(Xy1) / len(X_all)
 
-    return X, y, dist0, dist1, priory0, priory1
+    return X_sample, y_sample, dist0, dist1, priory0, priory1
 
 
 def classify():
