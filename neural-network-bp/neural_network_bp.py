@@ -1,37 +1,39 @@
 import os
 from tkinter import X
 import numpy as np
+import pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 class CSV_Handler:
-
     def save_bias_weights(network):
+        folder = "nn_saved/"
         print("saving bias and weights")
 
         for i in range(len(network.biases)):
-            np.savetxt("b{}_hln{}.csv".format(i+1, network.a1.size), network.biases[i], delimiter=",")
+            np.savetxt(folder + "b{}_hls{}.csv".format(i+1, network.a1.size), network.biases[i], delimiter=",")
 
         for i in range(len(network.weights)):
-            np.savetxt("w{}_hln{}.csv".format(i+1, network.a1.size), network.weights[i], delimiter=",")
+            np.savetxt(folder + "w{}_hls{}.csv".format(i+1, network.a1.size), network.weights[i], delimiter=",")
 
     def load_bias_weights(network):
         print("loading bias and weights")
-
+        folder = "nn_saved/"
         for i in range(len(network.biases)):
-            filename = "b{}_hln{}.csv".format(i+1, network.a1.size)
-            if os.path.exists(filename):
-                bias = np.loadtxt(filename, delimiter=",", ndmin=2)
+            filepath = folder + "b{}_hls{}.csv".format(i+1, network.a1.size)
+            if os.path.exists(filepath):
+                bias = np.loadtxt(filepath, delimiter=",", ndmin=2)
                 if bias.shape == network.biases[i].shape:
-                    print("valid saved bias exists: ", filename)
+                    print("valid saved bias exists: ", filepath)
                     np.copyto(network.biases[i], bias)
 
         for i in range(len(network.weights)):
-            filename = "w{}_hln{}.csv".format(i+1, network.a1.size)
-            if os.path.exists(filename):
-                weight = np.loadtxt(filename, delimiter=",", ndmin=2)
+            filepath = folder + "w{}_hls{}.csv".format(i+1, network.a1.size)
+            if os.path.exists(filepath):
+                weight = np.loadtxt(filepath, delimiter=",", ndmin=2)
                 if weight.shape == network.weights[i].shape:
-                    print("valid saved weights exists: ", filename)
+                    print("valid saved weights exists: ", filepath)
                     np.copyto(network.weights[i], weight)
 
 def load_waldo_data(training_size_percent, testing_size_percent):
@@ -251,6 +253,12 @@ class Network:
         return self.sigmoid * (1 - self.sigmoid(z))
 
     def classify(self, x, y, batch_size):
+        self.true_positive = 0
+        self.true_negative = 0
+        self.false_positive = 0
+        self.false_negative = 0
+        self.accuracy = 0
+
         batch_count = int(x.shape[0] / batch_size)
         x_batch = np.split(x, batch_count)
         y_batch = np.split(y, batch_count)
@@ -326,11 +334,19 @@ class Network:
     def learn(self, x, y, batch_size, learning_rate, epochs):
         print("training network")
         batch_count = int(x.shape[0] / batch_size)
+        results = pd.DataFrame(columns=["mse", "accuracy"])
 
         for i in range(0, epochs):
 
             x_batch = np.split(x, batch_count)
             y_batch = np.split(y, batch_count)
+
+            self.true_positive = 0
+            self.true_negative = 0
+            self.false_positive = 0
+            self.false_negative = 0
+            self.accuracy = 0
+            cost = 0
 
             for j in range(0, len(x_batch)):
 
@@ -348,8 +364,24 @@ class Network:
                 # reset all the stored gradients
                 self.reset_gradients()
 
+                self.calculate_accuracy(self.a2, y_batch[j])
+                cost = self.cost(self.a2, y_batch[j]).sum()
+
+            new_stats = pd.DataFrame([(cost, self.accuracy / x.shape[0])], columns=["mse", "accuracy"])
+            results = pd.concat([results, new_stats], ignore_index=True)
+
             print("epoch: ", i, " avg loss: ", self.loss(y))
             CSV_Handler.save_bias_weights(NN)
+
+        folder = "media/"
+        plt.xlabel("Epochs")
+        results.mse.plot(title="Mean Squared Error. Hidden layer size: {}".format(self.a1.size))
+        plt.savefig(folder + "mse_hls{}_epochs{}.png".format(self.a1.size, epochs))
+
+        plt.clf()
+
+        results.accuracy.plot(title="Accuracy. Hidden layer size: {}".format(self.a1.size))
+        plt.savefig(folder + "acc_hls{}_epochs{}.png".format(self.a1.size, epochs))
 
 #waldo data
 #remainder becomes validation data. sum of batches must not exceed 100%
@@ -371,9 +403,9 @@ hidden_layer_count = 1
 output_layer_size = y_train.shape[1]
 batch_size = 1 # needs to be evenly divideable by training size
 learning_rate = 0.1 # Set your learning rate. 0.1 is a good starting point
-epochs = 20 # Set how many iterations you want to run the training for
+epochs = 50 # Set how many iterations you want to run the training for
 
-max_hidden_layer_size = 32
+max_hidden_layer_size = 31
 hidden_layer_step_size = 4
 
 for i in range(2, max_hidden_layer_size, hidden_layer_step_size):
