@@ -380,6 +380,7 @@ class Network:
 
         plt.clf()
 
+        plt.xlabel("Epochs")
         results.accuracy.plot(title="Accuracy. Hidden layer size: {}".format(self.a1.size))
         plt.savefig(folder + "acc_hls{}_epochs{}.png".format(self.a1.size, epochs))
 
