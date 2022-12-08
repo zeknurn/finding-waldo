@@ -374,12 +374,13 @@ class Network:
             CSV_Handler.save_bias_weights(NN)
 
         folder = "media/"
+
+        plt.clf()
         plt.xlabel("Epochs")
         results.mse.plot(title="Mean Squared Error. Hidden layer size: {}".format(self.a1.size))
         plt.savefig(folder + "mse_hls{}_epochs{}.png".format(self.a1.size, epochs))
 
         plt.clf()
-
         plt.xlabel("Epochs")
         results.accuracy.plot(title="Accuracy. Hidden layer size: {}".format(self.a1.size))
         plt.savefig(folder + "acc_hls{}_epochs{}.png".format(self.a1.size, epochs))
