@@ -70,15 +70,22 @@ def probability(X, distributions):
     return log_arr
 
 
-def logsumexp(x):
-    c = x.max()
-    return c + np.log(np.sum(np.exp(x - c)))
+def logsumexp(x_0, x_1):
+    if x_0.max() > x_1.max():
+        c = x_0.max()
+    else:
+        c = x_1.max()
+
+    x_0_log = c + np.log(np.sum(np.exp(x_0 - c)))
+    x_1_log = c + np.log(np.sum(np.exp(x_1 - c)))
+
+    return x_0_log, x_1_log
 
 
 def init():
     # Load data
     # X_example, y_example = make_blobs(n_samples=50, centers=2, n_features=2, random_state=1)
-    X_sample, y_sample, X_all, y_all = load_waldo_data(nr_data_points)
+    X_sample, y_sample, X_all, y_all = load_waldo_data(sample_size)
 
     y_sample = np.ndarray.flatten(y_sample)
     y_sample = y_sample.astype(int)
@@ -97,8 +104,10 @@ def init():
     # print(X_example[:2], y_example[:2])
 
     # # sort data into classes
-    Xy0 = X_all[y_all == 0]
-    Xy1 = X_all[y_all == 1]
+    #Xy0 = X_all[y_all == 0]
+    #Xy1 = X_all[y_all == 1]
+    Xy0 = X_sample[y_sample == 0]
+    Xy1 = X_sample[y_sample == 1]
     print('Sort data into classes')
     print("Not Waldo: ", Xy0.shape, "Waldo: ", Xy1.shape)
 
@@ -135,16 +144,17 @@ def classify():
     false_positive = 0
     false_negative = 0
     # classify one example
-    for i in range(nr_data_points):
+    for i in range(sample_size):
         Xsample, ysample = X[i], y[i]  # en rad
         # py0 = probability(Xsample, priory0, X1y0, X2y0) # given not Waldo
         # py1 = probability(Xsample, priory1, X1y1, X2y1) # given Waldo
-        log_arr0 = probability(Xsample, dist0)  # Cumulative probability given not Waldo
-        log_arr1 = probability(Xsample, dist1)  # CDF probability given not Waldo
+        log_arr0 = priory0 * probability(Xsample, dist0)  # Cumulative probability given not Waldo
+        log_arr1 = priory1 * probability(Xsample, dist1)  # CDF probability given not Waldo
 
         # Test
-        py0 = logsumexp(log_arr0) * priory0
-        py1 = logsumexp(log_arr1) * priory1
+        py0, py1 = logsumexp(log_arr0, log_arr1)
+
+        py1 -= 0.1
 
         print('Data point: ', i)
         print('P(y=0 | %s)' % py0)
@@ -173,14 +183,14 @@ def classify():
         test_notwaldo_count = 1
 
     print("Bayesian classifier without GA")
-    print("total accuracy: ", (accuracy / nr_data_points * 100, "%"))
+    print("total accuracy: ", (accuracy / sample_size * 100, "%"))
     print("true_positive: ", (true_positive / test_waldo_count * 100, "%"))
     print("true_negative: ", (true_negative / test_notwaldo_count * 100, "%"))
     print("false_positive: ", (false_positive / test_notwaldo_count * 100, "%"))
     print("false_negative: ", (false_negative / test_waldo_count * 100, "%"))
 
 
-nr_data_points = 10
+sample_size = 100
 start_time = time.time()
 
 X, y, dist0, dist1, priory0, priory1 = init()
