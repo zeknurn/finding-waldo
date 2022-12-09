@@ -84,8 +84,8 @@ def calculate_fitness_score(Xsample, ysample, population):
     log_arr1 = probability_ga(Xsample, dist1, population)  # CDF probability given not Waldo
 
     # Note: Possibly remove prior for GA testing, Add prior here if need be!
-    py0 = logsumexp(log_arr0)
-    py1 = logsumexp(log_arr1)
+    py0 = logsumexp(log_arr0) * priory0
+    py1 = logsumexp(log_arr1) * priory1
 
     # print('P(y=0 | %s) = %.3f' % (Xsample, py0))
     # print('P(y=1 | %s) = %.3f' % (Xsample, py1))
@@ -318,14 +318,14 @@ def classify():
 # Representation of distributions.
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
-population_count = 100
+population_count = 2
 nr_data_points = 10
-epochs = 100
+epochs = 20
 start_time = time.time()
 
 np.random.seed(1337)  # Reproducible results
 X, y, dist0, dist1, priory0, priory1 = init()
-#run_ga(epochs)
+run_ga(epochs)
 
 classify()
 print("--- %s seconds ---" % (time.time() - start_time))
