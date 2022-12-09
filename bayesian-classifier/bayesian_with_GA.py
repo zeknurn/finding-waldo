@@ -34,7 +34,7 @@ def calculate_fitness_score(Xsample, ysample, population):
     py0, py1 = bayesian_classifier_pca.logsumexp(log_arr0, log_arr1)
 
     # necessary bias
-    py1 -= 0.1
+    #py1 -= 0.1
 
     # print('P(y=0 | %s) = %.3f' % (Xsample, py0))
     # print('P(y=1 | %s) = %.3f' % (Xsample, py1))
@@ -132,8 +132,8 @@ def create_population():
     return populations
 
 
-def run_ga(epochs, best_score_current, populations, sample_size):
-    results = pd.DataFrame(columns=["best_score"])
+def run_ga(epochs, best_score_current, populations, sample_size, results):
+
 
     for i in range(0, epochs):
         print('Epoch: ', i, ':')
@@ -230,7 +230,7 @@ def classify():
     false_negative = 0
 
     for i in range(sample_size):
-        Xsample, ysample = X[i], y[i]  # en rad
+        Xsample, ysample = X[i], y[i]  # one row / picture
         log_arr0 = priory0 * probability_ga(Xsample, dist0, best_population)  # Cumulative probability given not Waldo
         log_arr1 = priory1 * probability_ga(Xsample, dist1, best_population)  # CDF probability given not Waldo
 
@@ -238,7 +238,7 @@ def classify():
         py0, py1 = bayesian_classifier_pca.logsumexp(log_arr0, log_arr1)
 
         # necessary bias
-        py1 -= 0.1
+        #py1 -= 0.1
 
         print('Data point: ', i)
         print('P(y=0 | %s)' % py0)
@@ -278,9 +278,9 @@ def classify():
 # Representation of distributions.
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
-population_count = 10
+population_count = 2
 sample_size = 10
-epochs = 10
+epochs = 2
 start_time = time.time()
 
 np.random.seed(1337)  # Reproducible results
@@ -289,11 +289,25 @@ X, y, dist0, dist1, priory0, priory1 = init()
 print('Creating starting population')
 populations = create_population()
 print("Ranking fitness of starting population")
+
+# create dataframe to store results for plotting
+results = pd.DataFrame(columns=["best_score"])
+
+# rank and get the best score of the starting pop
 populations, best_score_current = rank_fitness(populations, 0)
+
+# add the best score of the starting pop
+new_stats = pd.DataFrame([(best_score_current)], columns=["best_score"])
+results = pd.concat([results, new_stats], ignore_index=True)
 print("Best starting pop score: ", best_score_current)
+
+# classify using starting pop
 classify()
 
-run_ga(epochs, best_score_current, populations, sample_size)
+# run ga on the populations
+run_ga(epochs, best_score_current, populations, sample_size, results)
 
+# classify using the best evolved pop
 classify()
+
 print("--- %s seconds ---" % (time.time() - start_time))
