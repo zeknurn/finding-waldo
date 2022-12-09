@@ -82,7 +82,7 @@ def logsumexp(x_0, x_1):
     return x_0_log, x_1_log
 
 
-def init():
+def init(sample_size):
     # Load data
     # X_example, y_example = make_blobs(n_samples=50, centers=2, n_features=2, random_state=1)
     X_sample, y_sample, X_all, y_all = load_waldo_data(sample_size)
@@ -137,7 +137,7 @@ def init():
     return X_sample, y_sample, dist0, dist1, priory0, priory1
 
 
-def classify():
+def classify(X, y, dist0, dist1, priory0, priory1, sample_size):
     accuracy = 0
     true_positive = 0
     true_negative = 0
@@ -154,7 +154,7 @@ def classify():
         py0, py1 = logsumexp(log_arr0, log_arr1)
 
         # necessary bias
-        py1 -= 0.1
+        py1 -= 1
 
         print('Data point: ', i)
         print('P(y=0 | %s)' % py0)
@@ -189,11 +189,14 @@ def classify():
     print("false_positive: ", (false_positive / test_notwaldo_count * 100, "%"))
     print("false_negative: ", (false_negative / test_waldo_count * 100, "%"))
 
+def main():
+    sample_size = 100
+    start_time = time.time()
 
-sample_size = 200
-start_time = time.time()
+    X, y, dist0, dist1, priory0, priory1 = init(sample_size)
+    classify(X, y, dist0, dist1, priory0, priory1, sample_size)
 
-X, y, dist0, dist1, priory0, priory1 = init()
-classify()
+    print("--- %s seconds ---" % (time.time() - start_time))
 
-print("--- %s seconds ---" % (time.time() - start_time))
+
+#main()

@@ -11,6 +11,8 @@ from numpy import mean
 from numpy import std
 import time
 import bayesian_classifier_pca
+import matplotlib.pyplot as plt
+import pandas as pd
 
 # This probability function uses indexes from GA to find which PDF values we should use.
 # Works identically as the one above, except different indexes.
@@ -53,8 +55,9 @@ def rank_fitness(populations, best_score_current):
     populations = sorted(populations, key=lambda x: x[2], reverse=True)
 
     best_score_new = populations[0][2]
-    print("Best score: ", best_score_new)
+    print("Best score: ", best_score_new, "Best current score: ", best_score_current)
     if best_score_new > best_score_current:
+        print("Saving new best pop to csv")
         np.savetxt('ga_best_population.csv', populations[0][1], delimiter=',')
 
     return populations, best_score_new
@@ -129,10 +132,9 @@ def create_population():
     return populations
 
 
-def run_ga(epochs):
-    print('Creating starting population')
-    populations = create_population()
-    best_score_current = 0
+def run_ga(epochs, best_score_current, populations, sample_size):
+    results = pd.DataFrame(columns=["best_score"])
+
     for i in range(0, epochs):
         print('Epoch: ', i, ':')
         # print('Population: ', populations)
@@ -147,12 +149,19 @@ def run_ga(epochs):
         print('Starting rank fitness - Epoch: ', i)
 
         populations, best_score_new = rank_fitness(populations, best_score_current)
-
+        new_stats = pd.DataFrame([(best_score_new)], columns=["best_score"])
+        results = pd.concat([results, new_stats], ignore_index=True)
         if best_score_new > best_score_current:
             best_score_current = best_score_new
 
         print('Rank fitness done - Epoch: ', i)
         print(populations)
+
+    
+    plt.clf()
+    plt.xlabel("Epochs")
+    results.best_score.plot(title="Best Fitness Score")
+    plt.savefig("bestscore_pop_size{}_samplesize{}_epochs{}.png".format(len(populations), sample_size, epochs))
 
 
 def init():
@@ -211,7 +220,7 @@ def init():
 
 
 def classify():
-    #Load best population
+    print("Loading best pop from csv")
     best_population = np.loadtxt('ga_best_population.csv', delimiter=',').astype(np.int64)
 
     accuracy = 0
@@ -222,8 +231,8 @@ def classify():
 
     for i in range(sample_size):
         Xsample, ysample = X[i], y[i]  # en rad
-        log_arr0 = priory0 * probability_ga(Xsample, dist0, population)  # Cumulative probability given not Waldo
-        log_arr1 = priory1 * probability_ga(Xsample, dist1, population)  # CDF probability given not Waldo
+        log_arr0 = priory0 * probability_ga(Xsample, dist0, best_population)  # Cumulative probability given not Waldo
+        log_arr1 = priory1 * probability_ga(Xsample, dist1, best_population)  # CDF probability given not Waldo
 
         # Note: Possibly remove prior for GA testing,
         py0, py1 = bayesian_classifier_pca.logsumexp(log_arr0, log_arr1)
@@ -270,13 +279,21 @@ def classify():
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
 population_count = 2
-sample_size = 1
-epochs = 1
+sample_size = 10
+epochs = 2
 start_time = time.time()
 
 np.random.seed(1337)  # Reproducible results
 X, y, dist0, dist1, priory0, priory1 = init()
-run_ga(epochs)
+
+print('Creating starting population')
+populations = create_population()
+print("Ranking fitness of starting population")
+populations, best_score_current = rank_fitness(populations, 0)
+print("Best starting pop score: ", best_score_current)
+classify()
+
+run_ga(epochs, best_score_current, populations, sample_size)
 
 classify()
 print("--- %s seconds ---" % (time.time() - start_time))
