@@ -278,9 +278,9 @@ def classify():
 # Representation of distributions.
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
-population_count = 2
+population_count = 10
 sample_size = 10
-epochs = 2
+epochs = 10
 start_time = time.time()
 
 np.random.seed(1337)  # Reproducible results

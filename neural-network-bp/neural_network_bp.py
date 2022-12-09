@@ -405,7 +405,7 @@ hidden_layer_count = 1
 output_layer_size = y_train.shape[1]
 batch_size = 1 # needs to be evenly divideable by training size
 learning_rate = 0.1 # Set your learning rate. 0.1 is a good starting point
-epochs = 50 # Set how many iterations you want to run the training for
+epochs = 100 # Set how many iterations you want to run the training for
 
 max_hidden_layer_size = 31
 hidden_layer_step_size = 4
