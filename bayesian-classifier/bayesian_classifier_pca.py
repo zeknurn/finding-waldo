@@ -151,9 +151,9 @@ def classify():
         log_arr0 = priory0 * probability(Xsample, dist0)  # Cumulative probability given not Waldo
         log_arr1 = priory1 * probability(Xsample, dist1)  # CDF probability given not Waldo
 
-        # Test
         py0, py1 = logsumexp(log_arr0, log_arr1)
 
+        # necessary bias
         py1 -= 0.1
 
         print('Data point: ', i)
@@ -190,7 +190,7 @@ def classify():
     print("false_negative: ", (false_negative / test_waldo_count * 100, "%"))
 
 
-sample_size = 100
+sample_size = 200
 start_time = time.time()
 
 X, y, dist0, dist1, priory0, priory1 = init()
