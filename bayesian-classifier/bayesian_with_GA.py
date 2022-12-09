@@ -10,57 +10,7 @@ import numpy as np
 from numpy import mean
 from numpy import std
 import time
-
-
-# Function to load in the dataset, uses PCA values obtained previously.
-# Returns X, y, which is the PCA values of the image, and the corresponding true value for that image.
-# 1 is Waldo, 0 is not Waldo.
-def load_waldo_data(sample_size):
-    print("loading data")
-    # Read data file and label images with Waldo as 1, and not Waldo as 0.
-    with open('features_waldo.csv', 'r') as f:
-        x = np.loadtxt(f, delimiter=',')
-        y = np.ones(shape=(x.shape[0], 1))
-    with open('features_notwaldo.csv', 'r') as t:
-        x_2 = np.loadtxt(t, delimiter=',')
-        y_2 = np.zeros(shape=(x_2.shape[0], 1))
-    x = np.append(x, x_2, axis=0)
-    y = np.append(y, y_2, axis=0)
-
-    # set the random seed to get the same result every run
-    np.random.seed(0)
-    # get the row count of the matrix
-    rows = x.shape[0]
-
-    # shuffle the rows of the matrix
-    randomize = np.arange(len(x))
-    np.random.shuffle(randomize)
-    x = x[randomize]
-    y = y[randomize]
-    print('done')
-    return x[:sample_size], y[:sample_size], x, y
-
-
-# This function fits each and every single variable in a column to a normal distribution.
-# The normal distribution for each variable is then stored in an array upon returning.
-def fit_distribution(data):
-    mu = mean(data)
-    sigma = std(data)
-    dist = norm(mu, sigma)
-    return dist
-
-
-# The Bayesian probability function.
-# Here we use the values obtained from the probability density function of each variable.
-# Since values can range from -2 sigma, +2 sigma, probability values either over-, or underflow.
-# We use the log-sum trick to normalize values
-# P(x1 | W) * P(x2 | W)...
-def probability(X, prior, distributions):
-    log_arr = np.empty(distributions.shape[0])
-    for j in range(0, distributions.shape[0]):
-        log_arr[j] = distributions[j].pdf(X[j])
-    return log_arr
-
+import bayesian_classifier_pca
 
 # This probability function uses indexes from GA to find which PDF values we should use.
 # Works identically as the one above, except different indexes.
@@ -73,19 +23,16 @@ def probability_ga(Xsample, distributions, population):
     return log_arr
 
 
-def logsumexp(x):
-    c = x.max()
-    return c + np.log(np.sum(np.exp(x - c)))
-
-
 def calculate_fitness_score(Xsample, ysample, population):
     fitness_score = 0
-    log_arr0 = probability_ga(Xsample, dist0, population)  # Cumulative probability given not Waldo
-    log_arr1 = probability_ga(Xsample, dist1, population)  # CDF probability given not Waldo
+    log_arr0 = priory0 * probability_ga(Xsample, dist0, population)  # Cumulative probability given not Waldo
+    log_arr1 = priory1 * probability_ga(Xsample, dist1, population)  # CDF probability given not Waldo
 
-    # Note: Possibly remove prior for GA testing, Add prior here if need be!
-    py0 = logsumexp(log_arr0) * priory0
-    py1 = logsumexp(log_arr1) * priory1
+    # Note: Possibly remove prior for GA testing,
+    py0, py1 = bayesian_classifier_pca.logsumexp(log_arr0, log_arr1)
+
+    # necessary bias
+    py1 -= 0.1
 
     # print('P(y=0 | %s) = %.3f' % (Xsample, py0))
     # print('P(y=1 | %s) = %.3f' % (Xsample, py1))
@@ -115,7 +62,7 @@ def rank_fitness(populations, best_score_current):
 
 def cumulative_fitness(population):
     tmp = 0
-    for j in range(0, nr_data_points):
+    for j in range(0, sample_size):
         print("Calculating fitness for data point nr: ", j)
         tmp += calculate_fitness_score(X[j], y[j], population)
 
@@ -211,7 +158,7 @@ def run_ga(epochs):
 def init():
     # Load data
     # X_example, y_example = make_blobs(n_samples=50, centers=2, n_features=2, random_state=1)
-    X_sample, y_sample, X_all, y_all = load_waldo_data(nr_data_points)
+    X_sample, y_sample, X_all, y_all = bayesian_classifier_pca.load_waldo_data(sample_size)
 
     y_sample = np.ndarray.flatten(y_sample)
     y_sample = y_sample.astype(int)
@@ -230,21 +177,23 @@ def init():
     # print(X_example[:2], y_example[:2])
 
     # # sort data into classes
-    Xy0 = X_all[y_all == 0]
-    Xy1 = X_all[y_all == 1]
+    #Xy0 = X_all[y_all == 0]
+    #Xy1 = X_all[y_all == 1]
+    Xy0 = X_sample[y_sample == 0]
+    Xy1 = X_sample[y_sample == 1]
     print('Sort data into classes')
     print("Not Waldo: ", Xy0.shape, "Waldo: ", Xy1.shape)
 
     # Loop, rad N. 6144
     # Create PDFs for y == 0
 
-    X1y0 = fit_distribution(Xy0[:, 0])
+    X1y0 = bayesian_classifier_pca.fit_distribution(Xy0[:, 0])
     # X2y0 = fit_distribution(Xy0[:, 1])
 
     # Distributions for y == 0
     dist0 = np.empty(Xy0.shape[1], dtype=type(X1y0))
     for i in range(0, Xy0.shape[1]):
-        dist0[i] = fit_distribution(Xy0[:, i])
+        dist0[i] = bayesian_classifier_pca.fit_distribution(Xy0[:, i])
 
     # Create PDfs for y == 1
     # X1y1 = fit_distribution(Xy1[:, 0])
@@ -253,7 +202,7 @@ def init():
     # Distributions for y == 1
     dist1 = np.empty(Xy1.shape[1], dtype=type(X1y0))
     for i in range(0, Xy1.shape[1]):
-        dist1[i] = fit_distribution(Xy1[:, i])
+        dist1[i] = bayesian_classifier_pca.fit_distribution(Xy1[:, i])
 
     priory0 = len(Xy0) / len(X_all)
     priory1 = len(Xy1) / len(X_all)
@@ -271,14 +220,16 @@ def classify():
     false_positive = 0
     false_negative = 0
 
-    for i in range(nr_data_points):
+    for i in range(sample_size):
         Xsample, ysample = X[i], y[i]  # en rad
-        log_arr0 = probability_ga(Xsample, dist0, best_population)  # Cumulative probability given not Waldo
-        log_arr1 = probability_ga(Xsample, dist1, best_population)  # CDF probability given not Waldo
+        log_arr0 = priory0 * probability_ga(Xsample, dist0, population)  # Cumulative probability given not Waldo
+        log_arr1 = priory1 * probability_ga(Xsample, dist1, population)  # CDF probability given not Waldo
 
-        # Test
-        py0 = logsumexp(log_arr0) * priory0
-        py1 = logsumexp(log_arr1) * priory1
+        # Note: Possibly remove prior for GA testing,
+        py0, py1 = bayesian_classifier_pca.logsumexp(log_arr0, log_arr1)
+
+        # necessary bias
+        py1 -= 0.1
 
         print('Data point: ', i)
         print('P(y=0 | %s)' % py0)
@@ -307,7 +258,7 @@ def classify():
         test_notwaldo_count = 1
 
     print("Bayesian classifier WITH GA")
-    print("total accuracy: ", (accuracy / nr_data_points * 100, "%"))
+    print("total accuracy: ", (accuracy / sample_size * 100, "%"))
     print("true_positive: ", (true_positive / test_waldo_count * 100, "%"))
     print("true_negative: ", (true_negative / test_notwaldo_count * 100, "%"))
     print("false_positive: ", (false_positive / test_notwaldo_count * 100, "%"))
@@ -319,8 +270,8 @@ def classify():
 # The population is represented by an array of indexes, each index is a key for a PDF.
 # The GA works by finding a combination of PDFs that yield the highest score.
 population_count = 2
-nr_data_points = 10
-epochs = 20
+sample_size = 1
+epochs = 1
 start_time = time.time()
 
 np.random.seed(1337)  # Reproducible results
