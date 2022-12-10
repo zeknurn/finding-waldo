@@ -54,3 +54,19 @@ gray_scale_cooccurance(path_waldo, "probabilities_waldo.csv")
 #without waldo
 path_notwaldo = get_path("path_notwaldo.txt")
 gray_scale_cooccurance(path_notwaldo, "probabilities_notwaldo.csv")
+
+# Sum and avg. of non waldo glcm values.
+df = pd.read_csv('probabilities_notwaldo.csv')
+nr_of_values = numpy.count_nonzero(df)
+sum = df.to_numpy().sum()
+print('Not Waldo')
+print(sum)
+print(sum / nr_of_values)
+
+# Sum and avg. of waldo glcm values.
+df = pd.read_csv('probabilities_waldo.csv')
+nr_of_values = numpy.count_nonzero(df)
+sum = df.to_numpy().sum()
+print('Waldo')
+print(sum)
+print(sum / nr_of_values)
