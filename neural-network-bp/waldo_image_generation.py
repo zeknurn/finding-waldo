@@ -2,9 +2,9 @@ from os import listdir
 import random
 from PIL import Image
   
-waldo_overlay_path = r"C:\Users\johan\Downloads\Hey-Waldo-master\64\waldo_overlay"
-notwaldo_path = r"C:\Users\johan\Downloads\Hey-Waldo-master\64\notwaldo"
-output_path = r"C:\Users\johan\Downloads\Hey-Waldo-master\64\waldo_generated"
+waldo_overlay_path = r"your\path\to\folder"
+notwaldo_path = r"your\path\to\folder"
+output_path = r"your\path\to\folder"
 
 def get_image_paths(path):
     image_paths = []

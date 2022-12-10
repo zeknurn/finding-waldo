@@ -17,47 +17,6 @@ def get_path(filename):
     f.close()
     return text
 
-def prewitt_kernel(path):
-        #reading the image 
-        image = imread('13_1_1.jpg', as_gray=True)
-
-        #calculating horizontal edges using prewitt kernel
-        edges_prewitt_horizontal = prewitt_h(image)
-        #calculating vertical edges using prewitt kernel
-        edges_prewitt_vertical = prewitt_v(image)
-
-        imshow(edges_prewitt_horizontal, cmap='gray')
-        plt.show()
-
-def gray_scale_cooccurance(path, feature_filename):
-        with open(feature_filename, 'w') as f:
-
-            glcm = np.empty((256,256,1,1))
-            count = 0
-            for file in listdir(path):
-                count += 1
-                image_path = path + '/' + file
-                #reading the image 
-                image = imread(image_path, as_gray=True)
-
-                glcm += graycomatrix(img_as_ubyte(image), distances=[0], angles=[0], 
-                            symmetric=True, normed=True)
-            
-            average = glcm / count
-            #print(glcm)
-
-            np.savetxt(f, average[:, :, 0, 0], delimiter=',')
-
-
-def gray_scale_cooccurance_single_image(path_to_image, out_file_name):
-    with open(out_file_name, 'w') as f:
-        # glcm = np.empty((256, 256, 1, 1))
-        image = imread(path_to_image, as_gray=True)
-        glcm = graycomatrix(img_as_ubyte(image), distances=[0], angles=[0],
-                             symmetric=True, normed=True)
-        np.savetxt(f, glcm[:, :, 0, 0], delimiter=',')
-
-
 def get_hsv_limits(bgr_value, range_value):
         color = np.uint8([[bgr_value]])
 
@@ -199,14 +158,10 @@ def get_min_max_colors(path1, output_filename):
 #with waldo
 path_waldo = get_path("path_waldo.txt")
 #extract_color_proportion(path_waldo, "waldo_color.csv")
-#gray_scale_cooccurance(path_waldo, "probabilities_waldo.csv")
 
 #without waldo
 path_notwaldo = get_path("path_notwaldo.txt")
 #extract_color_proportion(path_notwaldo, "notwaldo_color.csv")
-#gray_scale_cooccurance(path_notwaldo, "probabilities_notwaldo.csv")
 
 #get_min_max_colors(path_waldo, "color_min_max_waldo.csv")
 #get_min_max_colors(path_notwaldo, "color_min_max_notwaldo.csv")
-
-#prewitt_kernel(path)
