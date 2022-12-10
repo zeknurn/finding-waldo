@@ -28,7 +28,6 @@
     <Compile Include="bayesian_classifier_pca_with_GA.py" />
     <Compile Include="feature_extraction_glcm.py" />
     <Compile Include="feature_extraction_colors.py" />
-    <Compile Include="gclm_preprocessing.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
