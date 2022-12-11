@@ -6,7 +6,7 @@ from numpy import mean
 from numpy import std
 import time
 
-
+# loads all waldo data and returns data and label matrices of sample size
 def load_waldo_data(sample_size):
     print("loading data")
     # Read data file and label images with Waldo as 1, and not Waldo as 0.
@@ -41,23 +41,6 @@ def fit_distribution(data):
     dist = norm(mu, sigma)
     return dist
 
-
-# def probability(X, prior, dist1, dist2):
-#     return prior * dist1.pdf(X[0]) * dist2.pdf(X[1])
-
-
-# If underflow possible, convert multiplication to log.
-# def probability(X, prior, distributions):
-#     # prior = 1
-#     c = np.empty(distributions.shape[0])
-#
-#     for i in range(0, 32):
-#    # for i in range(0, distributions.shape[0]):
-#         value = distributions[i].pdf(X[i])
-#         c[i] = value
-#         prior *= value
-#     return prior
-
 # The Bayesian probability function.
 # Here we use the values obtained from the probability density function of each variable.
 # Since values can range from -2 sigma, +2 sigma, probability values either over-, or underflow.
@@ -70,7 +53,10 @@ def probability(X, distributions):
     return log_arr
 
 
+# performs the log sum trick on the matrices
 def logsumexp(x_0, x_1):
+
+    # find whichever of the two matrices has the highest max
     if x_0.max() > x_1.max():
         c = x_0.max()
     else:
@@ -81,10 +67,10 @@ def logsumexp(x_0, x_1):
 
     return x_0_log, x_1_log
 
-
+# loads the data and creates the distributions for waldo and not waldo
 def init(sample_size):
+
     # Load data
-    # X_example, y_example = make_blobs(n_samples=50, centers=2, n_features=2, random_state=1)
     X_sample, y_sample, X_all, y_all = load_waldo_data(sample_size)
 
     y_sample = np.ndarray.flatten(y_sample)
@@ -93,50 +79,38 @@ def init(sample_size):
     y_all = np.ndarray.flatten(y_all)
     y_all = y_all.astype(int)
 
-    # print('Waldo shape X: ', X.shape, '/// Example shape X: ', X_example.shape)
-    # print('Waldo shape y: ', y.shape, '/// Example shape y: ', y_example.shape)
     print('Waldo dataset:')
     print('Waldo shape X:', X_sample.shape)
     print('Waldo shape y:', y_sample.shape)
 
-    # print(X[:2], y[:2])
-    # print('Blobs dataset:')
-    # print(X_example[:2], y_example[:2])
-
-    # # sort data into classes
-    #Xy0 = X_all[y_all == 0]
-    #Xy1 = X_all[y_all == 1]
+    # sort data into classes
     Xy0 = X_sample[y_sample == 0]
     Xy1 = X_sample[y_sample == 1]
-    print('Sort data into classes')
+
+    print('Sorted data into classes')
     print("Not Waldo: ", Xy0.shape, "Waldo: ", Xy1.shape)
 
-    # Loop, rad N. 6144
-    # Create PDFs for y == 0
-
+    # get distribution type for matrix creation
     X1y0 = fit_distribution(Xy0[:, 0])
-    # X2y0 = fit_distribution(Xy0[:, 1])
 
     # Distributions for y == 0
     dist0 = np.empty(Xy0.shape[1], dtype=type(X1y0))
     for i in range(0, Xy0.shape[1]):
         dist0[i] = fit_distribution(Xy0[:, i])
 
-    # Create PDfs for y == 1
-    # X1y1 = fit_distribution(Xy1[:, 0])
-    # X2y1 = fit_distribution(Xy1[:, 1])
-
     # Distributions for y == 1
     dist1 = np.empty(Xy1.shape[1], dtype=type(X1y0))
     for i in range(0, Xy1.shape[1]):
         dist1[i] = fit_distribution(Xy1[:, i])
 
+    #calculate proportions of waldo and not waldo for prior
     priory0 = len(Xy0) / len(X_all)
     priory1 = len(Xy1) / len(X_all)
 
     return X_sample, y_sample, dist0, dist1, priory0, priory1
 
 
+# classify the given samples using the provided distributions and prior data
 def classify(X, y, dist0, dist1, priory0, priory1, sample_size):
     accuracy = 0
     true_positive = 0
@@ -145,15 +119,17 @@ def classify(X, y, dist0, dist1, priory0, priory1, sample_size):
     false_negative = 0
     # classify one example
     for i in range(sample_size):
-        Xsample, ysample = X[i], y[i]  # en rad
-        # py0 = probability(Xsample, priory0, X1y0, X2y0) # given not Waldo
-        # py1 = probability(Xsample, priory1, X1y1, X2y1) # given Waldo
+
+        
+        Xsample, ysample = X[i], y[i] # get one data point
+
         log_arr0 = priory0 * probability(Xsample, dist0)  # Cumulative probability given not Waldo
         log_arr1 = priory1 * probability(Xsample, dist1)  # CDF probability given not Waldo
 
         py0, py1 = logsumexp(log_arr0, log_arr1)
 
-        # necessary bias
+        # necessary bias relative to the size of the sample. 
+        # bigger sample needs a bigger bias. for 100 samples 1 is enough.
         py1 -= 1
 
         print('Data point: ', i)
@@ -199,4 +175,4 @@ def main():
     print("--- %s seconds ---" % (time.time() - start_time))
 
 
-#main()
+#main() # disable main if you plan on running the bayesian classifier with GA
