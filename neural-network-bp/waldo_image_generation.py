@@ -29,8 +29,10 @@ def overlay_image(background_image_path, overlay_image_path, i):
   
     # Displaying the image
     #img1.show()
+    # Saving the image
     image_path = output_path + '/' + "waldo_{}.png".format(i+1)
     img1.save(image_path)
+
 
 waldo_overlay_paths = get_image_paths(waldo_overlay_path)
 background_images = get_image_paths(notwaldo_path)

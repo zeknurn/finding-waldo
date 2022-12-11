@@ -12,7 +12,11 @@ def run_PCA(path, feature_filename):
         for file in listdir(path):
             image_path = path + '/' + file
             rgb_image = plt.imread(image_path)
+
+            # split the image rgb channels into three separate matrices
             b, g, r = cv2.split(rgb_image)  # RGB are stored in reverse order in OpenCV
+
+            # normalize the rgb matrices
             r_scaled = r / 255
             g_scaled = g / 255
             b_scaled = b / 255
@@ -33,6 +37,8 @@ def run_PCA(path, feature_filename):
 
 
             num = 32 # 32, ca 8% loss, 16 ca 45% loss.
+
+            # perform pca on each of the rgb matrices
             pca_r = PCA(n_components=num)
             pca_r_trans = pca_r.fit_transform(r_scaled)
 
@@ -42,15 +48,18 @@ def run_PCA(path, feature_filename):
             pca_b = PCA(n_components=num)
             pca_b_trans = pca_b.fit_transform(b_scaled)
 
+            #flatten rgb matrices to single dimension arrays
             feature_vec_r = numpy.asarray(pca_r_trans).flatten()
             feature_vec_g = numpy.asarray(pca_g_trans).flatten()
             feature_vec_b = numpy.asarray(pca_b_trans).flatten()
-
+            
+            # add rgb arrays together
             feature_vec = []
             feature_vec = numpy.append(feature_vec, feature_vec_r, 0)
             feature_vec = numpy.append(feature_vec, feature_vec_g, 0)
             feature_vec = numpy.append(feature_vec, feature_vec_b, 0)
 
+            # save array as one row in file
             numpy.savetxt(f, feature_vec.reshape(1, feature_vec.shape[0]), delimiter=',',)
 
             # For calculating total loss of image quality.
